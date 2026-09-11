@@ -16,14 +16,14 @@ const PROGRAM = {
   },
   'Friday': {
     focus:'Upper Volume Day', exercises:[
-      ['Close-Grip Bench',4,8,10],['Chest-Supported Row',4,10,12],['Seated DB Press',3,10,12],['EZ Curl',4,10,12],['Triceps Pushdown',4,10,12]
+      ['Close-Grip Bench',4,8,10],['Chest-Supported Row',4,10,12],['Seated DB Press',3,10,12],['Assisted Chin-Ups',3,8,12],['Triceps Pushdown',4,10,12],['EZ Curl',4,10,12]
     ]
   }
 };
 const MUSCLE_MAP={
 'Squat':{Quads:1,Glutes:.5,Hamstrings:.5},'Lunges':{Quads:1,Glutes:.5,Hamstrings:.5},'Leg Press':{Quads:1,Glutes:.5},'Leg Curls':{Hamstrings:1},
 'Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Incline Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Overhead Press':{Delts:1,Triceps:.5},'Pullups':{Back:1,Biceps:.5},'Lateral Raise':{'Side Delts':1},
-'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes/No':{Neck:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1}};
+'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes/No':{Neck:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'Assisted Chin-Ups':{Back:1,Biceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1}};
 const DAYS=Object.keys(PROGRAM), MEMBERS=['David','Dan','Jason','Vinjo'], WEEKS=12, INCREMENT=5;
 const KEY='barbarian_bulk_pwa_v1';
 let state=loadState();
@@ -47,7 +47,7 @@ function sessionRows(member,week,day,exercise){
   const prev=week>1?getLog(member,week-1,day,exercise):null;
   if(prev){
     const complete=ex[2]!=null && prev.sets.length===ex[1] && prev.sets.every(s=>Number(s.reps)>=ex[3]);
-    weight=(Number(prev.workingWeight)||0)+(complete?INCREMENT:0);
+    weight=exercise==='Assisted Chin-Ups' ? Math.max(0,(Number(prev.workingWeight)||0)-(complete?INCREMENT:0)) : (Number(prev.workingWeight)||0)+(complete?INCREMENT:0);
   }
   if(prev && !weight) weight=Number(prev.workingWeight)||0;
   return {workingWeight:weight,sets:Array.from({length:ex[1]},()=>({weight:weight,reps:''})),saved:false};
@@ -89,7 +89,7 @@ function exerciseCard(m,w,day,ex){
   if(ex[1]===0) return `<article class="exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">Each</div></div></div><p class="muted" style="margin:12px 0 0">Accessory/superset note from the original program.</p></article>`;
   const log=sessionRows(m,w,day,ex[0]); const mt=metrics(log,ex); const suggested=log.workingWeight||0; const isSaved=getLog(m,w,day,ex[0]);
   const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
-  return `<article class="exercise" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div>${mt.ready?'<span class="add-badge">ADD 5 LB NEXT</span>':'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
+  return `<article class="exercise" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
     <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div></div></div>
     ${log.sets.map((s,i)=>`<div class="set-table"><div class="set-num">${i+1}</div><input class="mini-input set-weight" inputmode="decimal" type="number" min="0" step="5" value="${s.weight??''}" aria-label="${ex[0]} set ${i+1} weight"><input class="mini-input set-reps" inputmode="numeric" type="number" min="0" step="1" value="${s.reps??''}" aria-label="${ex[0]} set ${i+1} reps"><div class="set-status ${ex[3]!=null && Number(s.reps)>=ex[3]?'good':'bad'}">${ex[3]!=null&&Number(s.reps)>=ex[3]?'✓':'•'}</div></div>`).join('')}
     <div class="metrics"><div class="metric"><div class="label">Top weight</div><div class="value top-val">${mt.top||'—'}</div></div><div class="metric"><div class="label">Total reps</div><div class="value reps-val">${mt.reps||'—'}</div></div><div class="metric"><div class="label">Volume</div><div class="value volume-val">${mt.volume?Math.round(mt.volume):'—'}</div></div></div>
@@ -120,7 +120,7 @@ function saveMacroDay(){const n=nutritionState(state.member),date=todayKey();n.d
 function saveMacroTargets(){const n=nutritionState(state.member);n.targets={protein:Number(document.getElementById('targetProtein').value)||0,fat:Number(document.getElementById('targetFat').value)||0,carbs:Number(document.getElementById('targetCarbs').value)||0,restCarbOffset:Number(document.getElementById('restOffset').value)||0};saveState();toast('Targets saved');render()}
 function applyMacroAdjustment(delta){const n=nutritionState(state.member),t=n.targets;n.history.push({date:todayKey(),protein:t.protein,fat:t.fat,carbs:t.carbs,note:`Carbs ${delta>0?'+':''}${delta}g`});t.carbs=Math.max(0,Number(t.carbs)+delta);saveState();toast('Macro target adjusted');render()}
 
-function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">12 weeks · Monday, Tuesday, Thursday, Friday</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb and starts the rep goal back at the bottom of the range.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
+function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">12 weeks · Monday, Tuesday, Thursday, Friday</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
 
 function bind(){
   const m=document.getElementById('memberSelect'); if(m)m.onchange=()=>{state.member=m.value;saveState();editing=null;render()};
