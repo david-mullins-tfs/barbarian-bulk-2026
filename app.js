@@ -16,14 +16,14 @@ const PROGRAM = {
   },
   'Friday': {
     focus:'Upper Volume Day', exercises:[
-      ['Close-Grip Bench',4,8,10],['Chest-Supported Row',4,10,12],['Seated DB Press',3,10,12],['EZ Curl + Tri Push',4,10,12],['W-Bar Superset',0,null,null]
+      ['Close-Grip Bench',4,8,10],['Chest-Supported Row',4,10,12],['Seated DB Press',3,10,12],['EZ Curl',4,10,12],['Triceps Pushdown',4,10,12]
     ]
   }
 };
 const MUSCLE_MAP={
 'Squat':{Quads:1,Glutes:.5,Hamstrings:.5},'Lunges':{Quads:1,Glutes:.5,Hamstrings:.5},'Leg Press':{Quads:1,Glutes:.5},'Leg Curls':{Hamstrings:1},
 'Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Incline Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Overhead Press':{Delts:1,Triceps:.5},'Pullups':{Back:1,Biceps:.5},'Lateral Raise':{'Side Delts':1},
-'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes/No':{Neck:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'EZ Curl + Tri Push':{Biceps:1,Triceps:1}};
+'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes/No':{Neck:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1}};
 const DAYS=Object.keys(PROGRAM), MEMBERS=['David','Dan','Jason','Vinjo'], WEEKS=12, INCREMENT=5;
 const KEY='barbarian_bulk_pwa_v1';
 let state=loadState();
@@ -88,7 +88,8 @@ function workoutView(week,day){
 function exerciseCard(m,w,day,ex){
   if(ex[1]===0) return `<article class="exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">Each</div></div></div><p class="muted" style="margin:12px 0 0">Accessory/superset note from the original program.</p></article>`;
   const log=sessionRows(m,w,day,ex[0]); const mt=metrics(log,ex); const suggested=log.workingWeight||0; const isSaved=getLog(m,w,day,ex[0]);
-  return `<article class="exercise" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'}</div></div>${mt.ready?'<span class="add-badge">ADD 5 LB NEXT</span>':'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
+  const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
+  return `<article class="exercise" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div>${mt.ready?'<span class="add-badge">ADD 5 LB NEXT</span>':'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
     <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div></div></div>
     ${log.sets.map((s,i)=>`<div class="set-table"><div class="set-num">${i+1}</div><input class="mini-input set-weight" inputmode="decimal" type="number" min="0" step="5" value="${s.weight??''}" aria-label="${ex[0]} set ${i+1} weight"><input class="mini-input set-reps" inputmode="numeric" type="number" min="0" step="1" value="${s.reps??''}" aria-label="${ex[0]} set ${i+1} reps"><div class="set-status ${ex[3]!=null && Number(s.reps)>=ex[3]?'good':'bad'}">${ex[3]!=null&&Number(s.reps)>=ex[3]?'✓':'•'}</div></div>`).join('')}
     <div class="metrics"><div class="metric"><div class="label">Top weight</div><div class="value top-val">${mt.top||'—'}</div></div><div class="metric"><div class="label">Total reps</div><div class="value reps-val">${mt.reps||'—'}</div></div><div class="metric"><div class="label">Volume</div><div class="value volume-val">${mt.volume?Math.round(mt.volume):'—'}</div></div></div>
