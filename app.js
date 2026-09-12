@@ -171,6 +171,10 @@ function renderRestTimerControls(){
   dock.querySelectorAll('[data-rest-adjust]').forEach(b=>b.onclick=()=>window.BarbarianRestTimer.adjust(Number(b.dataset.restAdjust)));
 }
 
+window.BarbarianRestTimer = new window.BarbarianRest.RestTimer();
+window.BarbarianRestTimer.onTick = () => renderRestTimerControls();
+window.BarbarianRestTimer.onFinish = (label) => { renderRestTimerControls(); toast(`Rest complete${label ? `: ${label}` : ''}`); };
+
 document.getElementById('menuBtn').onclick=()=>document.getElementById('menuDialog').showModal();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 render();
