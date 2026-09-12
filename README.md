@@ -1,15 +1,32 @@
-(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.Nutrition=api;})(this,function(){
-  const num=v=>Number(v)||0;
-  function calories(m){return Math.round(num(m.protein)*4+num(m.carbs)*4+num(m.fat)*9)}
-  function remaining(goal,used){const r={protein:num(goal.protein)-num(used.protein),fat:num(goal.fat)-num(used.fat),carbs:num(goal.carbs)-num(used.carbs)};r.calories=calories(goal)-calories(used);return r}
-  function recommendation(rate,days){rate=num(rate);if(days<14)return {action:'wait',label:'KEEP TRACKING',detail:'Collect about 2 weeks of consistent scale readings before adjusting.'};if(rate>=0.4&&rate<=0.7)return {action:'stay',label:'STAY',detail:`Current trend: +${rate.toFixed(2)} lb/week.`};if(rate<0.4)return {action:'increase',label:'CONSIDER +100–150 KCAL',detail:'Suggested change: add about 25–38 g carbs/day.'};return {action:'decrease',label:'CONSIDER REDUCING CARBS',detail:'Suggested change: reduce carbs by 30–40 g/day.'}}
-  function weightTrend(entries){
-    const rows=(entries||[]).filter(x=>Number(x.weight)>0).sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-14);
-    const avg=a=>a.length?a.reduce((s,x)=>s+Number(x.weight),0)/a.length:0;
-    const current=rows.slice(-7), previous=rows.slice(-14,-7);
-    const currentAvg=avg(current), previousAvg=avg(previous);
-    const rate=current.length&&previous.length?currentAvg-previousAvg:0;
-    return {days:rows.length,currentAvg,previousAvg,rate};
-  }
-  return {calories,remaining,recommendation,weightTrend};
-});
+# Barbarian Bulk - Phone-First PWA
+
+A simple installable Progressive Web App for the 12-week Barbarian Bulk workout plan.
+
+## Included
+- Members: David, Dan, Jason, Vinjo
+- 12 weeks
+- Monday / Tuesday / Thursday / Friday workouts
+- Set-by-set weight and reps logging
+- Top weight, total reps, and volume indicators
+- Double progression: after every target set reaches the top of its rep range, the next session preloads +5 lb and returns the rep target to the bottom of the range
+- Local device storage
+- JSON export/import backup
+- Offline caching after first load
+
+## Run locally
+A service worker needs HTTP/HTTPS, so open through a local web server rather than `file://`.
+
+Example with Python:
+
+    python3 -m http.server 8080
+
+Then visit `http://localhost:8080/barbarian-bulk-pwa/`.
+
+## Install on a phone
+Host the folder on any HTTPS static host such as GitHub Pages, Netlify, Vercel, or Cloudflare Pages. Open the URL on the phone and use the browser's **Add to Home Screen / Install App** option.
+
+## Data model
+The app is intentionally backend-free for the first version. Each phone keeps its own logs in local storage. Use Export Backup to move or archive data. A shared multi-user backend can be added later if the group needs synchronized results across phones.
+
+## Cardio
+Manual cardio logging by member/date with activity, duration, optional distance, intensity, and optional calories. The Cardio tab shows a last-7-days summary and recent history.

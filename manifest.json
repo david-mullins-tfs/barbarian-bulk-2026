@@ -1,49 +1,13 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111827">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Barbarian Bulk">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css">
-  <title>Barbarian Bulk</title>
-</head>
-<body>
-  <header class="app-header">
-    <div>
-      <div class="eyebrow">WINTER FOUNDATION 5BD</div>
-      <h1>Barbarian Bulk</h1>
-    </div>
-    <button class="icon-btn" id="menuBtn" aria-label="Open menu">☰</button>
-  </header>
-
-  <main id="app" class="app-shell"></main>
-
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <button data-route="home" class="nav-btn active"><span>🏋️</span><small>Workout</small></button>
-    <button data-route="progress" class="nav-btn"><span>📈</span><small>Progress</small></button>
-    <button data-route="volume" class="nav-btn"><span>📊</span><small>Volume</small></button>
-    <button data-route="macros" class="nav-btn"><span>🥩</span><small>Macros</small></button>
-    <button data-route="settings" class="nav-btn"><span>⚙️</span><small>Settings</small></button>
-  </nav>
-
-  <dialog id="menuDialog" class="menu-dialog">
-    <button class="menu-item" data-action="export">Export backup</button>
-    <label class="menu-item file-item">Import backup<input id="importInput" type="file" accept="application/json" hidden></label>
-    <button class="menu-item danger" data-action="reset">Reset all local data</button>
-    <button class="menu-item" data-action="close">Close</button>
-  </dialog>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="restTimerDock" class="rest-dock" aria-live="polite"></div>
-
-  <script src="nutrition.js"></script>
-  <script src="rest-timer.js"></script>
-  <script src="volume.js"></script>
-  <script src="app.js" defer></script>
-</body>
-</html>
+{
+  "name": "Barbarian Bulk Workout Tracker",
+  "short_name": "Barbarian Bulk",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0f14",
+  "theme_color": "#111827",
+  "description": "Phone-first double-progression workout tracker for the Barbarian Bulk group.",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
