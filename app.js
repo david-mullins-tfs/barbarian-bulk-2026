@@ -1,29 +1,29 @@
 const PROGRAM = {
   'Monday': {
     focus:'Squat Focus', exercises:[
-      ['Squat',5,6,8],['Lunges',4,10,12],['Leg Press',3,10,12],['Leg Curls',3,12,15]
+      ['Squat',4,6,8],['Lunges',3,10,12],['Leg Press',3,10,12],['Leg Curls',3,12,15]
     ]
   },
   'Tuesday': {
     focus:'Bench Focus', exercises:[
-      ['Bench',5,6,8],['Incline Bench',3,8,10],['Overhead Press',4,8,10],['Pullups',4,6,9],['Lateral Raise',3,12,15]
+      ['Bench',4,6,8],['Incline Bench',3,8,10],['Overhead Press',3,8,10],['Pullups',3,6,9],['Lateral Raise',2,12,15]
     ]
   },
   'Thursday': {
     focus:'Deadlift Focus', exercises:[
-      ['Deadlift',5,5,7],['RDL',4,8,10],['Leg Curls',3,12,15],['Yes/No',3,12,15]
+      ['Deadlift',3,5,7],['RDL',3,8,10],['Leg Curls',3,12,15],['Yes Machine',3,12,15],['No Machine',3,12,15]
     ]
   },
   'Friday': {
     focus:'Upper Volume Day', exercises:[
-      ['Close-Grip Bench',4,8,10],['Chest-Supported Row',4,10,12],['Seated DB Press',3,10,12],['Assisted Chin-Ups',3,8,12],['Triceps Pushdown',4,10,12],['EZ Curl',4,10,12]
+      ['Close-Grip Bench',3,8,10],['Chest-Supported Row',3,10,12],['Seated DB Press',3,10,12],['Assisted Chin-Ups',3,8,12],['Triceps Pushdown',2,10,12],['EZ Curl',2,10,12]
     ]
   }
 };
 const MUSCLE_MAP={
 'Squat':{Quads:1,Glutes:.5,Hamstrings:.5},'Lunges':{Quads:1,Glutes:.5,Hamstrings:.5},'Leg Press':{Quads:1,Glutes:.5},'Leg Curls':{Hamstrings:1},
 'Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Incline Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Overhead Press':{Delts:1,Triceps:.5},'Pullups':{Back:1,Biceps:.5},'Lateral Raise':{'Side Delts':1},
-'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes/No':{Neck:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'Assisted Chin-Ups':{Back:1,Biceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1}};
+'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes Machine':{Abductors:1},'No Machine':{Adductors:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'Assisted Chin-Ups':{Back:1,Biceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1}};
 const DAYS=Object.keys(PROGRAM), MEMBERS=['David','Dan','Jason','Vinjo'], WEEKS=12, INCREMENT=5;
 const KEY='barbarian_bulk_pwa_v1';
 let state=loadState();
@@ -118,7 +118,7 @@ return `<section class="hero"><h2>${esc(m)} · Progress</h2><p>Track working wei
 function progressItem(m,ex){const values=[];for(let w=1;w<=WEEKS;w++){let found=null;for(const d of DAYS){const l=getLog(m,w,d,ex[0]);if(l){const mt=metrics(l,ex);found=mt.top||l.workingWeight||0;break}}values.push(found||0)}const best=Math.max(0,...values);return `<article class="progress-item"><div class="top"><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Best ${best||'—'} lb</div></div><div class="mini-grid">${values.map((v,i)=>`<div class="week-chip ${i+1===state.week?'active':''}"><div class="w">W${i+1}</div><div class="v">${v||'—'}</div></div>`).join('')}</div></article>`}
 
 
-function volumeView(){const m=state.member,w=state.week,planned=Volume.programmedVolume(PROGRAM,MUSCLE_MAP),done=Volume.completedVolume(state.logs,PROGRAM,MUSCLE_MAP,m,w);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
+function volumeView(){const m=state.member,w=state.week,planned=Volume.programmedVolume(PROGRAM,MUSCLE_MAP),done=Volume.completedVolume(state.logs,PROGRAM,MUSCLE_MAP,m,w);const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];const shoulderProgram=shoulderParts.reduce((n,x)=>n+(planned[x]||0),0);const shoulderDone=shoulderParts.reduce((n,x)=>n+(done[x]||0),0);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderProgram.toFixed(1)}</div><div class="volume-number">${shoulderDone.toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderProgram)}">${Volume.classifyVolume(shoulderProgram)}</div></div><div class="info">Shoulder total combines general delts plus front, side, and rear-delt weighted credits. Individual rows remain below for detail.</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
 
 function macrosView(){
   const m=state.member,n=nutritionState(m),date=todayKey(),d=n.days[date]||{protein:'',fat:'',carbs:'',weight:'',dayType:'training'},base=n.targets;
