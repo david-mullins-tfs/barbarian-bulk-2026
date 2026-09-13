@@ -8,8 +8,8 @@
     const w=Number(weight)||0;if(w<=0)return [];
     return [[.50,8,60],[.75,3,120]].map(([p,reps,rest])=>({weight:round5(w*p),reps,rest}));
   }
-  const MAIN={Monday:'Squat',Tuesday:'Bench',Thursday:'Deadlift',Friday:'Close-Grip Bench'};
-  const SECONDARY=new Set(['Lunges','Leg Press','Incline Bench','Overhead Press','RDL','Chest-Supported Row','Seated DB Press']);
+  const MAIN={Monday:'Squat',Tuesday:'Bench',Thursday:'Deadlift',Friday:'Close-Grip Bench',Sunday:'Incline DB Press'};
+  const SECONDARY=new Set(['Lunges','Leg Press','Incline Bench','Overhead Press','RDL','Chest-Supported Row','Seated DB Press','DB Fly','Incline DB Curl','Hammer Curl']);
   function kindFor(day,exercise){
     if(MAIN[day]===exercise)return 'main';
     if(exercise==='Assisted Chin-Ups')return 'assisted';
