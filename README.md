@@ -30,3 +30,6 @@ The app is intentionally backend-free for the first version. Each phone keeps it
 
 ## Cardio
 Manual cardio logging by member/date with activity, duration, optional distance, intensity, and optional calories. The Cardio tab shows a last-7-days summary and recent history.
+
+## v9 warm-up ramps
+Main compounds automatically suggest a 30/50/70/85% warm-up ramp with escalating rests of 1:00, 1:30, 2:00, and 2:30. Secondary compounds use two acclimation sets. Warm-ups are suggestions only and are excluded from progression and weekly volume.
