@@ -20,15 +20,10 @@ const PROGRAM = {
     ]
   }
 };
-const DAVID_SUNDAY={
-  'Sunday': {focus:'Chest + Biceps Specialization', exercises:[['Incline DB Press',3,8,12],['DB Fly',2,12,15],['Incline DB Curl',3,8,12],['Hammer Curl',2,10,15]]}
-};
-function programFor(member){return member==='David'?Object.assign({},PROGRAM,DAVID_SUNDAY):PROGRAM;}
-function daysFor(member){return Object.keys(programFor(member));}
 const MUSCLE_MAP={
 'Squat':{Quads:1,Glutes:.5,Hamstrings:.5},'Lunges':{Quads:1,Glutes:.5,Hamstrings:.5},'Leg Press':{Quads:1,Glutes:.5},'Leg Curls':{Hamstrings:1},
 'Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Incline Bench':{Chest:1,Triceps:.5,'Front Delts':.5},'Overhead Press':{Delts:1,Triceps:.5},'Pullups':{Back:1,Biceps:.5},'Lateral Raise':{'Side Delts':1},
-'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes Machine':{Abductors:1},'No Machine':{Adductors:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'Assisted Chin-Ups':{Back:1,Biceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1},'Incline DB Press':{Chest:1,Triceps:.5,'Front Delts':.5},'DB Fly':{Chest:1},'Incline DB Curl':{Biceps:1},'Hammer Curl':{Biceps:1}};
+'Deadlift':{Glutes:1,Hamstrings:1,Back:.5},'RDL':{Hamstrings:1,Glutes:1,Back:.5},'Yes Machine':{Abductors:1},'No Machine':{Adductors:1},'Close-Grip Bench':{Triceps:1,Chest:.5,'Front Delts':.5},'Chest-Supported Row':{Back:1,Biceps:.5,'Rear Delts':.5},'Seated DB Press':{Delts:1,Triceps:.5},'Assisted Chin-Ups':{Back:1,Biceps:.5},'EZ Curl':{Biceps:1},'Triceps Pushdown':{Triceps:1}};
 const DAYS=Object.keys(PROGRAM), MEMBERS=['David','Dan','Jason','Vinjo'], WEEKS=12, INCREMENT=5;
 const KEY='barbarian_bulk_pwa_v1';
 let state=loadState();
@@ -45,7 +40,7 @@ function key(member,week,day,exercise){return [member,week,day,exercise].join('|
 function getLog(member,week,day,exercise){return state.logs[key(member,week,day,exercise)] || null}
 function targetText(ex){return ex[3]==null?'Each':`${ex[2]}–${ex[3]}`}
 function sessionRows(member,week,day,exercise){
-  const ex=programFor(member)[day].exercises.find(x=>x[0]===exercise); if(!ex) return null;
+  const ex=PROGRAM[day].exercises.find(x=>x[0]===exercise); if(!ex) return null;
   const existing=getLog(member,week,day,exercise);
   if(existing) return existing;
   let weight=0;
@@ -66,7 +61,7 @@ function metrics(log,ex){
   return {top:Math.max(0,...weights),reps:repsTotal,volume,ready};
 }
 function dayComplete(member,week,day){
-  return programFor(member)[day].exercises.every(ex=>{const l=getLog(member,week,day,ex[0]); return ex[1]===0 ? true : !!l && l.sets.length===ex[1] && l.sets.every(s=>s.reps!=='');});
+  return PROGRAM[day].exercises.every(ex=>{const l=getLog(member,week,day,ex[0]); return ex[1]===0 ? true : !!l && l.sets.length===ex[1] && l.sets.every(s=>s.reps!=='');});
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
@@ -75,17 +70,17 @@ function render(){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.t
 
 function homeView(){
   if(editing) return workoutView(editing.week,editing.day);
-  const m=state.member,w=state.week, days=daysFor(m), pct=Math.round((days.filter(d=>dayComplete(m,w,d)).length/days.length)*100);
+  const m=state.member,w=state.week, pct=Math.round((DAYS.filter(d=>dayComplete(m,w,d)).length/DAYS.length)*100);
   return `<section class="hero"><h2>${esc(m)} · Week ${w}</h2><p>Double progression: hit the top of every target set, then the next session moves up ${INCREMENT} lb and returns to the bottom of the range.</p>
     <div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div>
     <div style="margin-top:15px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px"><span>Week completion</span><b>${pct}%</b></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
-  </section><div class="section-title">Training days</div><div class="day-grid">${days.map(day=>dayCard(m,w,day)).join('')}</div>
+  </section><div class="section-title">Training days</div><div class="day-grid">${DAYS.map(day=>dayCard(m,w,day)).join('')}</div>
   <div class="section-title">Program notes</div><div class="info">Choose a starting weight. Keep that weight until all target sets reach the top of the range. Then add 5 lb next session and start the rep target back at the bottom.</div>`;
 }
-function dayCard(m,w,day){const plan=programFor(m),done=dayComplete(m,w,day), n=plan[day].exercises.length;return `<button class="day-card" data-open-day="${day}" style="text-align:left"><div class="day-top"><div><div class="day-name">${day}</div><div class="focus">${plan[day].focus} · ${n} exercises</div></div><div class="done-dot ${done?'done':''}"></div></div><div class="action-row" style="margin-top:12px"><span class="secondary" style="display:flex;align-items:center;justify-content:center">${done?'Review':'Start workout'}</span></div></button>`}
+function dayCard(m,w,day){const done=dayComplete(m,w,day), n=PROGRAM[day].exercises.length;return `<button class="day-card" data-open-day="${day}" style="text-align:left"><div class="day-top"><div><div class="day-name">${day}</div><div class="focus">${PROGRAM[day].focus} · ${n} exercises</div></div><div class="done-dot ${done?'done':''}"></div></div><div class="action-row" style="margin-top:12px"><span class="secondary" style="display:flex;align-items:center;justify-content:center">${done?'Review':'Start workout'}</span></div></button>`}
 
 function workoutView(week,day){
-  const m=state.member, info=programFor(m)[day];
+  const m=state.member, info=PROGRAM[day];
   return `<div class="workout-head"><div><button class="back" data-back>← Back</button><h2 style="margin-top:14px">${day} · Week ${week}</h2><p>${esc(info.focus)}</p></div></div>
     ${info.exercises.map(ex=>exerciseCard(m,week,day,ex)).join('')}
     <div class="action-row" style="margin:18px 0 6px"><button class="primary" data-finish-workout>Save ${day}</button></div>`;
@@ -117,13 +112,13 @@ function exerciseCard(m,w,day,ex){
   </article>`;
 }
 
-function progressView(){const m=state.member,plan=programFor(m),days=daysFor(m);const exercises=[...new Map(days.flatMap(d=>plan[d].exercises).map(x=>[x[0],x])).values()].filter(x=>x[1]);
+function progressView(){const m=state.member;const exercises=[...new Map(DAYS.flatMap(d=>PROGRAM[d].exercises).map(x=>[x[0],x])).values()].filter(x=>x[1]);
 return `<section class="hero"><h2>${esc(m)} · Progress</h2><p>Track working weight, total reps and volume across the 12-week plan.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">View week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===state.week?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section>
 <div class="section-title">Working weight by week</div><div class="progress-list">${exercises.map(ex=>progressItem(m,ex)).join('')}</div>`}
 function progressItem(m,ex){const values=[];for(let w=1;w<=WEEKS;w++){let found=null;for(const d of DAYS){const l=getLog(m,w,d,ex[0]);if(l){const mt=metrics(l,ex);found=mt.top||l.workingWeight||0;break}}values.push(found||0)}const best=Math.max(0,...values);return `<article class="progress-item"><div class="top"><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Best ${best||'—'} lb</div></div><div class="mini-grid">${values.map((v,i)=>`<div class="week-chip ${i+1===state.week?'active':''}"><div class="w">W${i+1}</div><div class="v">${v||'—'}</div></div>`).join('')}</div></article>`}
 
 
-function volumeView(){const m=state.member,w=state.week,plan=programFor(m),planned=Volume.programmedVolume(plan,MUSCLE_MAP),done=Volume.completedVolume(state.logs,plan,MUSCLE_MAP,m,w);const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];const shoulderProgram=shoulderParts.reduce((n,x)=>n+(planned[x]||0),0);const shoulderDone=shoulderParts.reduce((n,x)=>n+(done[x]||0),0);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderProgram.toFixed(1)}</div><div class="volume-number">${shoulderDone.toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderProgram)}">${Volume.classifyVolume(shoulderProgram)}</div></div><div class="info">Shoulder total combines general delts plus front, side, and rear-delt weighted credits. Individual rows remain below for detail.</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
+function volumeView(){const m=state.member,w=state.week,planned=Volume.programmedVolume(PROGRAM,MUSCLE_MAP),done=Volume.completedVolume(state.logs,PROGRAM,MUSCLE_MAP,m,w);const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];const shoulderProgram=shoulderParts.reduce((n,x)=>n+(planned[x]||0),0);const shoulderDone=shoulderParts.reduce((n,x)=>n+(done[x]||0),0);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderProgram.toFixed(1)}</div><div class="volume-number">${shoulderDone.toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderProgram)}">${Volume.classifyVolume(shoulderProgram)}</div></div><div class="info">Shoulder total combines general delts plus front, side, and rear-delt weighted credits. Individual rows remain below for detail.</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
 
 function macrosView(){
   const m=state.member,n=nutritionState(m),date=todayKey(),d=n.days[date]||{protein:'',fat:'',carbs:'',weight:'',dayType:'training'},base=n.targets;
@@ -153,7 +148,7 @@ function cardioView(){
 function cardioDateValues(){return {date:document.getElementById('cardioDate').value||todayKey(),activity:document.getElementById('cardioActivity').value,intensity:document.getElementById('cardioIntensity').value,duration:document.getElementById('cardioDuration').value,distance:document.getElementById('cardioDistance').value,calories:document.getElementById('cardioCalories').value};}
 function saveCardio(){const c=cardioState(state.member),x=cardioDateValues();if(!x.duration){toast('Enter cardio duration');return;}c.days[x.date]={activity:x.activity,intensity:x.intensity,duration:x.duration,distance:x.distance,calories:x.calories};saveState();toast('Cardio saved');render()}
 function clearCardio(){const c=cardioState(state.member),date=document.getElementById('cardioDate').value||todayKey();delete c.days[date];saveState();toast('Cardio cleared');render()}
-function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">12 weeks · Core Mon/Tue/Thu/Fri · David also Sunday</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
+function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">12 weeks · Monday, Tuesday, Thursday, Friday</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
 
 function bind(){
   const m=document.getElementById('memberSelect'); if(m)m.onchange=()=>{state.member=m.value;saveState();editing=null;render()};
@@ -166,14 +161,33 @@ function bind(){
   renderRestTimerControls();
   const back=document.querySelector('[data-back]');if(back)back.onclick=()=>{editing=null;render()};
   const fin=document.querySelector('[data-finish-workout]');if(fin)fin.onclick=()=>{persistAllVisibleExercises();editing=null;toast('Workout saved');render()};
-  document.querySelectorAll('.set-reps,.set-weight').forEach(inp=>inp.addEventListener('input',refreshCardMetrics));
+  document.querySelectorAll('.set-reps,.set-weight').forEach(inp=>inp.addEventListener('input',e=>{
+    if(e.target.classList.contains('set-weight')) syncFollowingWeights(e.target);
+    refreshCardMetrics(e);
+  }));
   document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));
   const sm=document.getElementById('saveMacros');if(sm)sm.onclick=saveMacroDay; const st=document.getElementById('saveTargets');if(st)st.onclick=saveMacroTargets; const dt=document.getElementById('dayType');if(dt)dt.onchange=()=>{const n=nutritionState(state.member),date=todayKey();n.days[date]=Object.assign(n.days[date]||{}, {dayType:dt.value});saveState();render()}; document.querySelectorAll('[data-adjust]').forEach(b=>b.onclick=()=>applyMacroAdjustment(Number(b.dataset.adjust))); const sc=document.getElementById('saveCardio');if(sc)sc.onclick=saveCardio; const cc=document.getElementById('clearCardio');if(cc)cc.onclick=clearCardio; const cd=document.getElementById('cardioDate');if(cd)cd.onchange=()=>{const c=cardioState(state.member),x=c.days[cd.value]||Cardio.blankEntry();['cardioActivity','cardioIntensity','cardioDuration','cardioDistance','cardioCalories'].forEach(id=>{const el=document.getElementById(id);if(id==='cardioActivity')el.value=x.activity||'Walking'; if(id==='cardioIntensity')el.value=x.intensity||'Moderate'; if(id==='cardioDuration')el.value=x.duration||''; if(id==='cardioDistance')el.value=x.distance||''; if(id==='cardioCalories')el.value=x.calories||'';});}; 
 }
-function readCard(card){const name=card.dataset.exercise;const plan=programFor(state.member),ex=[...Object.keys(plan).flatMap(d=>plan[d].exercises)].find(x=>x[0]===name);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value, reps:r.querySelector('.set-reps').value}));const ww=sets.find(s=>s.weight!=='')?.weight||'';return {workingWeight:Number(ww)||0,sets,saved:true};}
+
+function syncFollowingWeights(input){
+  const card=input.closest('.exercise');
+  if(!card || !window.BarbarianWeightSync)return;
+  const rows=[...card.querySelectorAll('.set-table:not(.header)')];
+  const row=input.closest('.set-table');
+  const index=rows.indexOf(row);
+  if(index<0)return;
+  const value=input.value;
+  const next=window.BarbarianWeightSync.propagateWeightChange(rows.map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value})),index,value);
+  next.forEach((set,i)=>{
+    const el=rows[i].querySelector('.set-weight');
+    if(el && el.value!==set.weight) el.value=set.weight;
+  });
+}
+
+function readCard(card){const name=card.dataset.exercise;const ex=[...DAYS.flatMap(d=>PROGRAM[d].exercises)].find(x=>x[0]===name);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value, reps:r.querySelector('.set-reps').value}));const ww=sets.find(s=>s.weight!=='')?.weight||'';return {workingWeight:Number(ww)||0,sets,saved:true};}
 function persistAllVisibleExercises(){document.querySelectorAll('[data-save-ex]').forEach(b=>{const card=b.closest('.exercise');if(card){const name=card.dataset.exercise;const log=readCard(card);state.logs[key(state.member,state.week,editing.day,name)]=log;}});saveState()}
 function saveExercise(name){const card=document.querySelector(`[data-exercise="${CSS.escape(name)}"]`);if(!card)return;state.logs[key(state.member,state.week,editing.day,name)]=readCard(card);saveState();toast(`${name} saved`);render();}
-function refreshCardMetrics(e){const card=e.target.closest('.exercise');if(!card)return;const ex=programFor(state.member)[editing.day].exercises.find(x=>x[0]===card.dataset.exercise);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value}));const mt=metrics({sets},ex);card.querySelector('.top-val').textContent=mt.top||'—';card.querySelector('.reps-val').textContent=mt.reps||'—';card.querySelector('.volume-val').textContent=mt.volume?Math.round(mt.volume):'—';if(e.target.classList.contains('set-weight')){const slot=card.querySelector('.warmup-slot');if(slot){const ww=sets.find(s=>s.weight!=='')?.weight||0;slot.innerHTML=warmupView(editing.day,ex,ww);slot.querySelectorAll('[data-warmup-rest]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.warmupLabel,Number(b.dataset.warmupRest)));}}}
+function refreshCardMetrics(e){const card=e.target.closest('.exercise');if(!card)return;const ex=PROGRAM[editing.day].exercises.find(x=>x[0]===card.dataset.exercise);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value}));const mt=metrics({sets},ex);card.querySelector('.top-val').textContent=mt.top||'—';card.querySelector('.reps-val').textContent=mt.reps||'—';card.querySelector('.volume-val').textContent=mt.volume?Math.round(mt.volume):'—';if(e.target.classList.contains('set-weight')){const slot=card.querySelector('.warmup-slot');if(slot){const ww=sets.find(s=>s.weight!=='')?.weight||0;slot.innerHTML=warmupView(editing.day,ex,ww);slot.querySelectorAll('[data-warmup-rest]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.warmupLabel,Number(b.dataset.warmupRest)));}}}
 function startRestTimer(exercise,seconds){ if(window.BarbarianRestTimer) window.BarbarianRestTimer.start(exercise, seconds||window.BarbarianRest.DEFAULT_SECONDS); }
 function action(a){if(a==='close')document.getElementById('menuDialog').close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{}};saveState();render();toast('Local data reset')}}}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='barbarian-bulk-backup.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
