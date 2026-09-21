@@ -29,6 +29,7 @@
     <button data-route="volume" class="nav-btn"><span>📊</span><small>Volume</small></button>
     <button data-route="macros" class="nav-btn"><span>🥩</span><small>Macros</small></button>
     <button data-route="cardio" class="nav-btn"><span>🏃</span><small>Cardio</small></button>
+    <button data-route="plates" class="nav-btn"><span>🧮</span><small>Plates</small></button>
     <button data-route="settings" class="nav-btn"><span>⚙️</span><small>Settings</small></button>
   </nav>
 
@@ -39,6 +40,7 @@
     <button class="menu-item" data-action="close">Close</button>
   </dialog>
 
+  <dialog id="plateDialog" class="menu-dialog plate-dialog"></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="restTimerDock" class="rest-dock" aria-live="polite"></div>
 
@@ -48,6 +50,7 @@
   <script src="warmup.js"></script>
   <script src="weight-sync.js"></script>
   <script src="volume.js"></script>
+  <script src="plate-counter.js"></script>
   <script src="app.js" defer></script>
 </body>
 </html>
