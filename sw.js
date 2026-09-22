@@ -1,7 +1,7 @@
-const CACHE = 'barbarian-bulk-v18';
+const CACHE = 'barbarian-bulk-v19';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
-  './volume.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './manifest.json',
+  './volume.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png'
 ];
 
