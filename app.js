@@ -104,7 +104,7 @@ function dayComplete(member,week,day){
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 function render(){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.route===route));
-  const app=document.getElementById('app'); if(route==='home') app.innerHTML=homeView(); else if(route==='progress') app.innerHTML=progressView(); else if(route==='volume') app.innerHTML=volumeView(); else if(route==='macros') app.innerHTML=macrosView(); else if(route==='cardio') app.innerHTML=cardioView(); else if(route==='plates') app.innerHTML=platesView(); else if(route==='program') app.innerHTML=programEditorView(); else app.innerHTML=settingsView(); bind();}
+  const app=document.getElementById('app'); if(route==='home') app.innerHTML=homeView(); else if(route==='progress') app.innerHTML=progressView(); else if(route==='volume') app.innerHTML=volumeView(); else if(route==='macros') app.innerHTML=macrosView(); else if(route==='cardio') app.innerHTML=cardioView(); else if(route==='plates') app.innerHTML=platesView(); else if(route==='notes') app.innerHTML=notesView(); else if(route==='program') app.innerHTML=programEditorView(); else app.innerHTML=settingsView(); bind();}
 
 function homeView(){
   if(editing) return workoutView(editing.week,editing.day);
@@ -215,6 +215,41 @@ function bindPlateControls(root,exercise='',modal=false){
   target.oninput=redraw;slider.oninput=()=>{target.value=slider.value;redraw();};root.querySelectorAll('[data-plate-step]').forEach(b=>b.onclick=()=>{target.value=Math.max(start,(Number(target.value)||start)+Number(b.dataset.plateStep));redraw();});
 }
 
+
+function notesView(){
+  state.noteFilters=state.noteFilters||{q:'',member:'',week:'',day:'',scope:'',exercise:''}; state.noteFilters.exercise=state.noteFilters.exercise||'';
+  const f=state.noteFilters; const rows=[];
+  for(const [k,text] of Object.entries(state.notes||{})){
+    if(!String(text||'').trim()) continue;
+    const parts=k.split('|'); if(parts[0]!=='note') continue;
+    const [,scope,member,week,day,exercise,setIndex]=parts;
+    const item={scope,member,week:Number(week),day,exercise:exercise||'',setIndex:setIndex===''?null:Number(setIndex),text:String(text)};
+    const hay=[item.text,item.scope,item.member,item.day,item.exercise,item.setIndex==null?'':`Set ${item.setIndex+1}`].join(' ').toLowerCase();
+    if(f.q && !hay.includes(f.q.toLowerCase())) continue;
+    if(f.member && f.member!==item.member) continue;
+    if(f.week && Number(f.week)!==item.week) continue;
+    if(f.day && f.day!==item.day) continue;
+    if(f.scope && f.scope!==item.scope) continue;
+    if(f.exercise && f.exercise!==item.exercise) continue;
+    rows.push(item);
+  }
+  rows.sort((a,b)=>b.week-a.week || a.member.localeCompare(b.member) || a.day.localeCompare(b.day) || a.exercise.localeCompare(b.exercise));
+  const dayOpts=[...new Set(MEMBERS.flatMap(m=>daysFor(m)))].sort();
+  const exOpts=[...new Set(MEMBERS.flatMap(m=>Object.values(programFor(m)).flatMap(d=>d.exercises.map(x=>x[0]))))].sort();
+  return `<section class="hero"><h2>Notes</h2><p>Search and filter workout, exercise, and set notes across your training history.</p>
+  <div class="notes-search"><input id="noteSearch" class="input" type="search" placeholder="Search notes..." value="${esc(f.q)}"></div>
+  <div class="notes-filters"><div><label class="field-label">Member</label><select id="noteMember" class="select"><option value="">All members</option>${MEMBERS.map(m=>`<option value="${m}" ${f.member===m?'selected':''}>${m}</option>`).join('')}</select></div>
+  <div><label class="field-label">Week</label><select id="noteWeek" class="select"><option value="">All weeks</option>${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${String(f.week)===String(i+1)?'selected':''}>Week ${i+1}</option>`).join('')}</select></div>
+  <div><label class="field-label">Type</label><select id="noteScope" class="select"><option value="">All note types</option><option value="workout" ${f.scope==='workout'?'selected':''}>Workout</option><option value="exercise" ${f.scope==='exercise'?'selected':''}>Exercise</option><option value="set" ${f.scope==='set'?'selected':''}>Set</option></select></div>
+  <div><label class="field-label">Day</label><select id="noteDay" class="select"><option value="">All days</option>${dayOpts.map(d=>`<option value="${d}" ${f.day===d?'selected':''}>${d}</option>`).join('')}</select></div><div><label class="field-label">Exercise</label><select id="noteExercise" class="select"><option value="">All exercises</option>${exOpts.map(x=>`<option value="${esc(x)}" ${f.exercise===x?'selected':''}>${esc(x)}</option>`).join('')}</select></div></div>
+  <div class="notes-result-summary"><b>${rows.length}</b> ${rows.length===1?'note':'notes'}</div></section>
+  <div class="notes-list">${rows.length?rows.map(noteResultCard).join(''):`<div class="info">No notes match these filters.</div>`}</div>`;
+}
+function noteResultCard(n){
+  const target=n.scope==='workout'?`${n.day} workout`:n.exercise+(n.scope==='set'?` · Set ${n.setIndex+1}`:'');
+  return `<article class="note-result" data-note-result-member="${esc(n.member)}" data-note-result-week="${n.week}" data-note-result-day="${esc(n.day)}" data-note-result-exercise="${esc(n.exercise)}"><div class="note-result-top"><div><span class="note-type">${esc(n.scope)}</span><h3>${esc(target)}</h3></div><div class="note-meta">${esc(n.member)} · W${n.week}</div></div><p>${esc(n.text)}</p><button class="secondary" data-open-note-result>Open workout</button></article>`;
+}
+
 function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Program</div><article class="progress-item"><div class="top"><div><div class="exercise-name">Customize the program</div><div class="muted">Choose exercises, sets, and rep ranges by member and day.</div></div><button class="secondary" data-route="program">Edit Program</button></div></article><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">12 weeks · Monday, Tuesday, Thursday, Friday${state.member==='David'?' · Sunday specialization':''}</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
 
 function bind(){
@@ -243,6 +278,13 @@ function bind(){
     inp.addEventListener('blur',handler);
   });
   document.querySelectorAll('[data-note-scope]').forEach(b=>b.onclick=()=>openNoteDialog(b));
+  const nq=document.getElementById('noteSearch'); if(nq) nq.oninput=()=>{state.noteFilters=state.noteFilters||{};state.noteFilters.q=nq.value;const pos=nq.selectionStart||nq.value.length;render();requestAnimationFrame(()=>{const el=document.getElementById('noteSearch');if(el){el.focus();el.setSelectionRange(pos,pos)}})};
+  const nmember=document.getElementById('noteMember'); if(nmember) nmember.onchange=()=>{state.noteFilters={...(state.noteFilters||{}),member:nmember.value};render()};
+  const nweek=document.getElementById('noteWeek'); if(nweek) nweek.onchange=()=>{state.noteFilters={...(state.noteFilters||{}),week:nweek.value};render()};
+  const nscope=document.getElementById('noteScope'); if(nscope) nscope.onchange=()=>{state.noteFilters={...(state.noteFilters||{}),scope:nscope.value};render()};
+  const nday=document.getElementById('noteDay'); if(nday) nday.onchange=()=>{state.noteFilters={...(state.noteFilters||{}),day:nday.value};render()};
+  const nex=document.getElementById('noteExercise'); if(nex) nex.onchange=()=>{state.noteFilters={...(state.noteFilters||{}),exercise:nex.value};render()};
+  document.querySelectorAll('[data-open-note-result]').forEach(b=>b.onclick=()=>{const card=b.closest('[data-note-result-member]');state.member=card.dataset.noteResultMember;state.week=Number(card.dataset.noteResultWeek);editing={week:state.week,day:card.dataset.noteResultDay};route='home';render()});
   document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));
   const md=document.getElementById('macroDate');if(md)md.onchange=()=>render(); const sm=document.getElementById('saveMacros');if(sm)sm.onclick=saveMacroDay; const st=document.getElementById('saveTargets');if(st)st.onclick=saveMacroTargets; const dt=document.getElementById('dayType');if(dt)dt.onchange=()=>{const n=nutritionState(state.member),date=md?.value||todayKey();n.days[date]=Object.assign(n.days[date]||{}, {dayType:dt.value,targetSnapshot:n.days[date]?.targetSnapshot||{...n.targets}});saveState();render()}; document.querySelectorAll('[data-macro-date]').forEach(b=>b.onclick=()=>{const md=document.getElementById('macroDate');if(md){md.value=b.dataset.macroDate;render()}}); document.querySelectorAll('[data-adjust]').forEach(b=>b.onclick=()=>applyMacroAdjustment(Number(b.dataset.adjust)));  const sc=document.getElementById('saveCardio');if(sc)sc.onclick=saveCardio; const cc=document.getElementById('clearCardio');if(cc)cc.onclick=clearCardio; const cd=document.getElementById('cardioDate');if(cd)cd.onchange=()=>{const c=cardioState(state.member),x=c.days[cd.value]||Cardio.blankEntry();['cardioActivity','cardioIntensity','cardioDuration','cardioDistance','cardioCalories'].forEach(id=>{const el=document.getElementById(id);if(id==='cardioActivity')el.value=x.activity||'Walking'; if(id==='cardioIntensity')el.value=x.intensity||'Moderate'; if(id==='cardioDuration')el.value=x.duration||''; if(id==='cardioDistance')el.value=x.distance||''; if(id==='cardioCalories')el.value=x.calories||'';});}; 
 }
