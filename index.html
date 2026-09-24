@@ -25,16 +25,18 @@
 
   <nav class="bottom-nav" aria-label="Main navigation">
     <button data-route="home" class="nav-btn active"><span>🏋️</span><small>Workout</small></button>
-    <button data-route="progress" class="nav-btn"><span>📈</span><small>Progress</small></button>
     <button data-route="volume" class="nav-btn"><span>📊</span><small>Volume</small></button>
     <button data-route="macros" class="nav-btn"><span>🥩</span><small>Macros</small></button>
     <button data-route="cardio" class="nav-btn"><span>🏃</span><small>Cardio</small></button>
-    <button data-route="plates" class="nav-btn"><span>🧮</span><small>Plates</small></button>
     <button data-route="notes" class="nav-btn"><span>📝</span><small>Notes</small></button>
-    <button data-route="settings" class="nav-btn"><span>⚙️</span><small>Settings</small></button>
   </nav>
 
   <dialog id="menuDialog" class="menu-dialog">
+    <button class="menu-item" data-action="route-progress">📈 Progress</button>
+    <button class="menu-item" data-action="route-plates">🧮 Plate Counter</button>
+    <button class="menu-item" data-action="route-program">🛠️ Program Editor</button>
+    <button class="menu-item" data-action="route-settings">⚙️ Settings</button>
+    <hr class="menu-separator">
     <button class="menu-item" data-action="export">Export backup</button>
     <label class="menu-item file-item">Import backup<input id="importInput" type="file" accept="application/json" hidden></label>
     <button class="menu-item danger" data-action="reset">Reset all local data</button>

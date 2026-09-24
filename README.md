@@ -12,3 +12,10 @@
 - Set-level notes can be pinned to an individual working set.
 - Notes are stored in the existing local backup/export data and survive app updates.
 - A highlighted note icon indicates that context has been saved.
+
+
+## v22
+- Phone bottom navigation reduced to Workout, Volume, Macros, Cardio, and Notes.
+- Progress, Plate Counter, Program Editor, Settings, and backup tools moved to the hamburger menu.
+- Added extra bottom safe-area spacing so workout Finish/Save controls are not covered.
+- Bottom navigation is locked to a single five-item row.
