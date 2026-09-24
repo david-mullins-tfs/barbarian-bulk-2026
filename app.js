@@ -55,17 +55,22 @@ const MUSCLE_MAP=muscleMapFromLibrary();
 const DAYS=Object.keys(PROGRAM), MEMBERS=['David','Dan','Jason','Vinjo'], WEEKS=12, INCREMENT=5;
 const KEY='barbarian_bulk_pwa_v1';
 let state=loadState();
+state.notes=state.notes||{};
 migratePrograms();
 let route='home'; let editing=null; let plateTarget=135; let plateStart=45;
 
 function loadState(){
   try{const raw=localStorage.getItem(KEY); if(raw) return JSON.parse(raw);}catch(e){}
-  return {member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{}};
+  return {member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};
 }
 function saveState(){localStorage.setItem(KEY,JSON.stringify(state));}
 function nutritionState(member){state.nutrition=state.nutrition||{};return state.nutrition[member]||(state.nutrition[member]={targets:{protein:150,fat:75,carbs:370,restCarbOffset:40},days:{},history:[]});}
 function todayKey(){return new Date().toISOString().slice(0,10)}
 function key(member,week,day,exercise){return [member,week,day,exercise].join('|')}
+function noteKey(scope,member,week,day,exercise,setIndex){return ['note',scope,member,week,day,exercise||'',setIndex==null?'':setIndex].join('|')}
+function getNote(scope,member,week,day,exercise,setIndex){return (state.notes||{})[noteKey(scope,member,week,day,exercise,setIndex)]||''}
+function hasNote(scope,member,week,day,exercise,setIndex){return !!getNote(scope,member,week,day,exercise,setIndex).trim()}
+function noteButton(scope,label,member,week,day,exercise,setIndex,compact=false){const active=hasNote(scope,member,week,day,exercise,setIndex);return `<button class="note-btn ${active?'has-note':''} ${compact?'compact':''}" data-note-scope="${scope}" data-note-label="${esc(label)}" data-note-exercise="${esc(exercise||'')}" data-note-set="${setIndex==null?'':setIndex}" aria-label="${active?'Edit':'Add'} ${esc(label)} note">📝${compact?'':active?' Note ✓':' Note'}</button>`}
 function getLog(member,week,day,exercise){return state.logs[key(member,week,day,exercise)] || null}
 function targetText(ex){return ex[3]==null?'Each':`${ex[2]}–${ex[3]}`}
 function sessionRows(member,week,day,exercise){
@@ -114,7 +119,7 @@ function dayCard(m,w,day){const plan=programFor(m),done=dayComplete(m,w,day), n=
 
 function workoutView(week,day){
   const m=state.member, info=programFor(m)[day];
-  return `<div class="workout-head"><div><button class="back" data-back>← Back</button><h2 style="margin-top:14px">${day} · Week ${week}</h2><p>${esc(info.focus)}</p></div></div>
+  return `<div class="workout-head"><div><button class="back" data-back>← Back</button><h2 style="margin-top:14px">${day} · Week ${week}</h2><p>${esc(info.focus)}</p></div>${noteButton('workout',day+' workout',m,week,day)}</div>
     ${info.exercises.map(ex=>exerciseCard(m,week,day,ex)).join('')}
     <div class="action-row" style="margin:18px 0 6px"><button class="primary" data-finish-workout>Save ${day}</button></div>`;
 }
@@ -137,11 +142,11 @@ function exerciseCard(m,w,day,ex){
   const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
   return `<article class="exercise" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div><button class="plate-quick" data-plate-ex="${esc(ex[0])}" data-plate-weight="${suggested||''}" aria-label="Plate count for ${esc(ex[0])}">🧮 ${suggested?suggested+' lb':'Plates'}</button>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
     <div class="warmup-slot">${warmupView(day,ex,suggested)}</div>
-    <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div></div></div>
-    ${log.sets.map((s,i)=>`<div class="set-table"><div class="set-num">${i+1}</div><input class="mini-input set-weight" inputmode="decimal" type="number" min="0" step="5" value="${s.weight??''}" aria-label="${ex[0]} set ${i+1} weight"><input class="mini-input set-reps" inputmode="numeric" type="number" min="0" step="1" placeholder="${ex[2]}-${ex[3]}" value="${s.reps??''}" aria-label="${ex[0]} set ${i+1} reps"><div class="set-status ${ex[3]!=null && Number(s.reps)>=ex[3]?'good':'bad'}">${ex[3]!=null&&Number(s.reps)>=ex[3]?'✓':'•'}</div></div>`).join('')}
+    <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div>Note</div><div></div></div>
+    ${log.sets.map((s,i)=>`<div class="set-table"><div class="set-num">${i+1}</div><input class="mini-input set-weight" inputmode="decimal" type="number" min="0" step="5" value="${s.weight??''}" aria-label="${ex[0]} set ${i+1} weight"><input class="mini-input set-reps" inputmode="numeric" type="number" min="0" step="1" placeholder="${ex[2]}-${ex[3]}" value="${s.reps??''}" aria-label="${ex[0]} set ${i+1} reps">${noteButton('set',ex[0]+' set '+(i+1),m,w,day,ex[0],i,true)}<div class="set-status ${ex[3]!=null && Number(s.reps)>=ex[3]?'good':'bad'}">${ex[3]!=null&&Number(s.reps)>=ex[3]?'✓':'•'}</div></div>`).join('')}
     <div class="metrics"><div class="metric"><div class="label">Top weight</div><div class="value top-val">${mt.top||'—'}</div></div><div class="metric"><div class="label">Total reps</div><div class="value reps-val">${mt.reps||'—'}</div></div><div class="metric"><div class="label">Volume</div><div class="value volume-val">${mt.volume?Math.round(mt.volume):'—'}</div></div></div>
     <div class="rest-controls"><div><div class="rest-label">Rest timer</div><div class="rest-note">Default 2:30 · adjust in 30-second steps</div></div><button class="secondary rest-start" data-rest-start="${esc(ex[0])}">▶ Start Rest</button></div>
-    <div class="action-row" style="margin-top:10px"><button class="secondary" data-save-ex="${esc(ex[0])}">${isSaved?'Update':'Save exercise'}</button></div>
+    <div class="action-row" style="margin-top:10px"><button class="secondary" data-save-ex="${esc(ex[0])}">${isSaved?'Update':'Save exercise'}</button>${noteButton('exercise',ex[0],m,w,day,ex[0])}</div>
   </article>`;
 }
 
@@ -237,8 +242,20 @@ function bind(){
     inp.addEventListener('change',handler);
     inp.addEventListener('blur',handler);
   });
+  document.querySelectorAll('[data-note-scope]').forEach(b=>b.onclick=()=>openNoteDialog(b));
   document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));
   const md=document.getElementById('macroDate');if(md)md.onchange=()=>render(); const sm=document.getElementById('saveMacros');if(sm)sm.onclick=saveMacroDay; const st=document.getElementById('saveTargets');if(st)st.onclick=saveMacroTargets; const dt=document.getElementById('dayType');if(dt)dt.onchange=()=>{const n=nutritionState(state.member),date=md?.value||todayKey();n.days[date]=Object.assign(n.days[date]||{}, {dayType:dt.value,targetSnapshot:n.days[date]?.targetSnapshot||{...n.targets}});saveState();render()}; document.querySelectorAll('[data-macro-date]').forEach(b=>b.onclick=()=>{const md=document.getElementById('macroDate');if(md){md.value=b.dataset.macroDate;render()}}); document.querySelectorAll('[data-adjust]').forEach(b=>b.onclick=()=>applyMacroAdjustment(Number(b.dataset.adjust)));  const sc=document.getElementById('saveCardio');if(sc)sc.onclick=saveCardio; const cc=document.getElementById('clearCardio');if(cc)cc.onclick=clearCardio; const cd=document.getElementById('cardioDate');if(cd)cd.onchange=()=>{const c=cardioState(state.member),x=c.days[cd.value]||Cardio.blankEntry();['cardioActivity','cardioIntensity','cardioDuration','cardioDistance','cardioCalories'].forEach(id=>{const el=document.getElementById(id);if(id==='cardioActivity')el.value=x.activity||'Walking'; if(id==='cardioIntensity')el.value=x.intensity||'Moderate'; if(id==='cardioDuration')el.value=x.duration||''; if(id==='cardioDistance')el.value=x.distance||''; if(id==='cardioCalories')el.value=x.calories||'';});}; 
+}
+
+function openNoteDialog(button){
+  const scope=button.dataset.noteScope, exercise=button.dataset.noteExercise||'', rawSet=button.dataset.noteSet;
+  const setIndex=rawSet===''?null:Number(rawSet), dlg=document.getElementById('noteDialog');
+  const label=button.dataset.noteLabel||'Note', existing=getNote(scope,state.member,state.week,editing?.day||'',exercise,setIndex);
+  dlg.innerHTML=`<div class="note-dialog-head"><div><div class="field-label">${esc(scope)} note</div><h3>${esc(label)}</h3></div><button class="icon-btn" data-note-close aria-label="Close note">×</button></div><textarea id="noteText" class="note-textarea" maxlength="1000" placeholder="Add context for this ${esc(scope)}…">${esc(existing)}</textarea><div class="action-row" style="margin-top:12px"><button class="primary" data-note-save>Save note</button><button class="secondary" data-note-clear>Clear note</button></div>`;
+  dlg.querySelector('[data-note-close]').onclick=()=>dlg.close();
+  dlg.querySelector('[data-note-save]').onclick=()=>{const value=dlg.querySelector('#noteText').value.trim();state.notes=state.notes||{};const k=noteKey(scope,state.member,state.week,editing?.day||'',exercise,setIndex);if(value)state.notes[k]=value;else delete state.notes[k];saveState();dlg.close();toast('Note saved');render();};
+  dlg.querySelector('[data-note-clear]').onclick=()=>{state.notes=state.notes||{};delete state.notes[noteKey(scope,state.member,state.week,editing?.day||'',exercise,setIndex)];saveState();dlg.close();toast('Note cleared');render();};
+  dlg.showModal(); setTimeout(()=>dlg.querySelector('#noteText')?.focus(),50);
 }
 
 function syncFollowingWeights(input){
@@ -284,7 +301,7 @@ function saveProgramChanges(){
   state.programs[m][day]=rows.map(row=>{const name=row.querySelector('.editor-exercise').value; const sets=Math.max(1,Number(row.querySelector('.editor-sets').value)||1); const min=Math.max(1,Number(row.querySelector('.editor-min').value)||1); const max=Math.max(min,Number(row.querySelector('.editor-max').value)||min); return [name,sets,min,max];});
   saveState(); toast(`${m} ${day} program saved`); route='home'; state.editorDay=day; render();
 }
-function action(a){if(a==='close')document.getElementById('menuDialog').close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{}};migratePrograms();saveState();render();toast('Local data reset')}}}
+function action(a){if(a==='close')document.getElementById('menuDialog').close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();saveState();render();toast('Local data reset')}}}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='barbarian-bulk-backup.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
 document.getElementById('importInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.logs||!x.member)throw new Error();state=x;migratePrograms();saveState();route='home';editing=null;render();toast('Backup imported')}catch(err){alert('That file is not a valid Barbarian Bulk backup.')}};r.readAsText(f);});
 function renderRestTimerControls(){
