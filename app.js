@@ -1,17 +1,17 @@
 const PROGRAM = {
   'Monday': {
     focus:'Squat Focus', exercises:[
-      ['Squat',4,6,8],['Lunges',3,10,12],['Leg Press',3,10,12],['Leg Curls',3,12,15]
+      ['Barbell Back Squat',4,6,8],['Lunges',3,10,12],['Leg Press',3,10,12],['Leg Curls',3,12,15]
     ]
   },
   'Tuesday': {
     focus:'Bench Focus', exercises:[
-      ['Bench',4,6,8],['Incline Bench',3,8,10],['Pec Deck',3,10,15],['Pullups',3,6,9],['Lateral Raise',2,12,15]
+      ['Barbell Bench Press',4,6,8],['Incline Bench',3,8,10],['Pec Deck',3,10,15],['Pullups',3,6,9],['Lateral Raise',2,12,15]
     ]
   },
   'Thursday': {
     focus:'Deadlift Focus', exercises:[
-      ['Deadlift',3,5,7],['RDL',3,8,10],['Leg Curls',3,12,15],['Yes Machine',3,12,15],['No Machine',3,12,15]
+      ['Barbell Deadlift',3,5,7],['RDL',3,8,10],['Leg Curls',3,12,15],['Yes Machine',3,12,15],['No Machine',3,12,15]
     ]
   },
   'Friday': {
@@ -33,6 +33,34 @@ function migratePrograms(){
       if(!Array.isArray(state.programs[member][day])) state.programs[member][day]=cloneExercises(baseProgramFor(member)[day].exercises);
     }
   }
+}
+function migrateEquipmentUpgrade(){
+  if(state.equipmentUpgradeV23)return;
+  const swaps={Monday:['Squat','Barbell Back Squat'],Tuesday:['Bench','Barbell Bench Press'],Thursday:['Deadlift','Barbell Deadlift']};
+  state.programs=state.programs||{};
+  for(const member of MEMBERS){
+    const mp=state.programs[member]||{};
+    for(const [day,[oldName,newName]] of Object.entries(swaps)){
+      const rows=mp[day];
+      if(Array.isArray(rows)&&rows[0]&&rows[0][0]===oldName) rows[0][0]=newName;
+    }
+  }
+  const historySwaps={'Squat':'Smith Machine Squat','Bench':'Smith Machine Bench Press','Deadlift':'Smith Machine Deadlift'};
+  const migratedLogs={};
+  for(const [k,v] of Object.entries(state.logs||{})){
+    const parts=k.split('|'); const old=parts[3];
+    if(historySwaps[old]) parts[3]=historySwaps[old];
+    const nk=parts.join('|'); migratedLogs[nk]=migratedLogs[nk]||v;
+  }
+  state.logs=migratedLogs;
+  const migratedNotes={};
+  for(const [k,v] of Object.entries(state.notes||{})){
+    const parts=k.split('|');
+    if(parts[0]==='note' && historySwaps[parts[5]]) parts[5]=historySwaps[parts[5]];
+    const nk=parts.join('|'); migratedNotes[nk]=migratedNotes[nk]||v;
+  }
+  state.notes=migratedNotes;
+  state.equipmentUpgradeV23=true;
 }
 function programFor(member){
   migratePrograms();
@@ -57,6 +85,8 @@ const KEY='barbarian_bulk_pwa_v1';
 let state=loadState();
 state.notes=state.notes||{};
 migratePrograms();
+migrateEquipmentUpgrade();
+saveState();
 let route='home'; let editing=null; let plateTarget=135; let plateStart=45;
 
 function loadState(){
@@ -190,8 +220,8 @@ function cardioDateValues(){return {date:document.getElementById('cardioDate').v
 function saveCardio(){const c=cardioState(state.member),x=cardioDateValues();if(!x.duration){toast('Enter cardio duration');return;}c.days[x.date]={activity:x.activity,intensity:x.intensity,duration:x.duration,distance:x.distance,calories:x.calories};saveState();toast('Cardio saved');render()}
 function clearCardio(){const c=cardioState(state.member),date=document.getElementById('cardioDate').value||todayKey();delete c.days[date];saveState();toast('Cardio cleared');render()}
 
-function plateBarFor(exercise){state.plateBars=state.plateBars||{};return Number(state.plateBars[exercise])||45;}
-function savePlateBar(exercise,start){if(!exercise)return;state.plateBars=state.plateBars||{};state.plateBars[exercise]=Number(start)||45;saveState();}
+function plateBarFor(exercise){state.plateBars=state.plateBars||{};if(Object.prototype.hasOwnProperty.call(state.plateBars,exercise))return Number(state.plateBars[exercise]);const meta=window.BarbarianExercises?.metadata?.(exercise);return meta&&meta.startingResistance!=null?Number(meta.startingResistance):45;}
+function savePlateBar(exercise,start){if(!exercise)return;state.plateBars=state.plateBars||{};const n=Number(start);state.plateBars[exercise]=Number.isFinite(n)?n:45;saveState();}
 function plateBreakdown(target,start){
   const exact=window.BarbarianPlates.platesPerSide(target,start); const result=exact?{total:Number(target),plates:exact}:window.BarbarianPlates.closestLoad(target,start);
   if(!result)return '<div class="empty">No load available.</div>';
@@ -201,13 +231,13 @@ function plateBreakdown(target,start){
   return `<div class="plate-total">${result.total} <span>lb total</span></div><div class="plate-side-title">Per side</div><div class="plate-stack">${rows||'<div class="plate-chip"><b>No plates</b><span>starting weight only</span></div>'}</div><div class="muted plate-math">${start} lb starting weight + ${Math.max(0,result.total-start)} lb plates = ${result.total} lb</div>${note}`;
 }
 function plateControls(target,start,exercise='',modal=false){
-  const presets=[20,35,45,167];
-  return `<div class="plate-controls"><label class="field-label">Bar / starting weight</label><div class="bar-presets">${presets.map(x=>`<button class="${Number(start)===x?'active':''}" data-bar-preset="${x}">${x}${x===167?' Leg Press':''}</button>`).join('')}<button class="${!presets.includes(Number(start))?'active':''}" data-bar-custom>Custom</button></div><div class="custom-bar ${presets.includes(Number(start))?'hidden':''}"><label class="field-label">Custom starting weight</label><input class="input" id="customBarWeight${modal?'Modal':''}" type="number" step="0.5" min="0" value="${start}"></div><label class="field-label" style="margin-top:14px">Target weight</label><div class="plate-target-row"><button class="secondary" data-plate-step="-5">−5</button><input class="input plate-target-input" type="number" min="0" step="5" value="${target}"><button class="secondary" data-plate-step="5">+5</button></div><input class="plate-slider" type="range" min="${Math.max(0,Number(start))}" max="1000" step="5" value="${Math.max(Number(start),Number(target)||Number(start))}"><div class="plate-result">${plateBreakdown(target,start)}</div></div>`;
+  const presets=[0,20,35,45,105,167];
+  return `<div class="plate-controls"><label class="field-label">Starting weight / resistance</label><div class="bar-presets">${presets.map(x=>`<button class="${Number(start)===x?'active':''}" data-bar-preset="${x}">${x}${x===105?' Hack Squat':x===167?' Leg Press':''}</button>`).join('')}<button class="${!presets.includes(Number(start))?'active':''}" data-bar-custom>Custom</button></div><div class="custom-bar ${presets.includes(Number(start))?'hidden':''}"><label class="field-label">Custom starting weight / resistance</label><input class="input" id="customBarWeight${modal?'Modal':''}" type="number" step="0.5" min="0" value="${start}"></div><label class="field-label" style="margin-top:14px">Target weight</label><div class="plate-target-row"><button class="secondary" data-plate-step="-5">−5</button><input class="input plate-target-input" type="number" min="0" step="5" value="${target}"><button class="secondary" data-plate-step="5">+5</button></div><input class="plate-slider" type="range" min="${Math.max(0,Number(start))}" max="1000" step="5" value="${Math.max(Number(start),Number(target)||Number(start))}"><div class="plate-result">${plateBreakdown(target,start)}</div></div>`;
 }
-function platesView(){return `<section class="hero"><h2>Plate Counter</h2><p>Select the bar or machine starting weight, then choose your target. Plate counts are shown per side.</p></section><article class="macro-card">${plateControls(plateTarget,plateStart)}</article><div class="info" style="margin-top:12px">Available plates: 45 · 25 · 10 · 5 · 2.5 lb. Custom starting weights are supported.</div>`;}
+function platesView(){return `<section class="hero"><h2>Plate Counter</h2><p>Select the bar or machine starting resistance, then choose your target. Plate counts are shown per side.</p></section><article class="macro-card">${plateControls(plateTarget,plateStart)}</article><div class="info" style="margin-top:12px">Available plates: 45 · 25 · 10 · 5 · 2.5 lb. Custom starting weights are supported.</div>`;}
 function openPlateDialog(exercise,target){const dlg=document.getElementById('plateDialog');const start=plateBarFor(exercise);dlg.dataset.exercise=exercise;dlg.innerHTML=`<div class="plate-dialog-head"><div><div class="field-label">${esc(exercise)}</div><h3>Plate Counter</h3></div><button class="icon-btn" data-close-plates>×</button></div>${plateControls(Number(target)||start,start,exercise,true)}`;bindPlateControls(dlg,exercise,true);dlg.querySelector('[data-close-plates]').onclick=()=>dlg.close();dlg.showModal();}
 function bindPlateControls(root,exercise='',modal=false){
-  const target=root.querySelector('.plate-target-input'), slider=root.querySelector('.plate-slider'), result=root.querySelector('.plate-result'); let start=Number(root.querySelector('[data-bar-preset].active')?.dataset.barPreset)||Number(root.querySelector('.custom-bar input')?.value)||45;
+  const target=root.querySelector('.plate-target-input'), slider=root.querySelector('.plate-slider'), result=root.querySelector('.plate-result'); const activePreset=root.querySelector('[data-bar-preset].active'); let start=activePreset?Number(activePreset.dataset.barPreset):(Number(root.querySelector('.custom-bar input')?.value)||45);
   const redraw=()=>{let t=Number(target.value)||start;if(t<start)t=start;target.value=t;slider.min=start;slider.value=t;result.innerHTML=plateBreakdown(t,start);if(!modal){plateTarget=t;plateStart=start;}if(exercise)savePlateBar(exercise,start);};
   root.querySelectorAll('[data-bar-preset]').forEach(b=>b.onclick=()=>{start=Number(b.dataset.barPreset);root.querySelectorAll('.bar-presets button').forEach(x=>x.classList.remove('active'));b.classList.add('active');root.querySelector('.custom-bar').classList.add('hidden');redraw();});
   const custom=root.querySelector('[data-bar-custom]');custom.onclick=()=>{root.querySelectorAll('.bar-presets button').forEach(x=>x.classList.remove('active'));custom.classList.add('active');root.querySelector('.custom-bar').classList.remove('hidden');start=Number(root.querySelector('.custom-bar input').value)||45;redraw();};
@@ -329,7 +359,7 @@ function exerciseOptions(selected){
 }
 function programEditorView(){
   const m=state.member, plan=programFor(m), day=state.editorDay||daysFor(m)[0], info=plan[day];
-  return `<section class="hero"><h2>Edit Program</h2><p>Each exercise carries its own default rep range, muscle mapping, equipment, and progression style. Exercise history is never deleted when you substitute a movement.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Day</label><select id="editorDay" class="select">${daysFor(m).map(d=>`<option ${d===day?'selected':''}>${d}</option>`).join('')}</select></div></div></section><div class="info">Replacing an exercise changes the current program only. Previous exercise logs remain in your history. A replacement uses its own default rep range and any previous weight history for that exact exercise.</div><div class="program-editor-list">${info.exercises.map((ex,i)=>{const meta=window.BarbarianExercises.metadata(ex[0]);const last=findLastExerciseWeight(m,ex[0]);return `<article class="progress-item program-slot" data-slot="${i}"><div class="field-label">Exercise ${i+1}</div><select class="select editor-exercise">${exerciseOptions(ex[0])}</select><div class="editor-grid"><div><label class="field-label">Sets</label><input class="input editor-sets" type="number" min=1 max=10 value="${ex[1]}"></div><div><label class="field-label">Min reps</label><input class="input editor-min" type="number" min=1 max=50 value="${ex[2]}"></div><div><label class="field-label">Max reps</label><input class="input editor-max" type="number" min=1 max=50 value="${ex[3]}"></div></div><div class="muted" style="margin-top:8px">${meta?`${esc(meta.type)} · ${esc(meta.equipment)} · ${esc(meta.primary)}${meta.secondary.length?' + '+esc(meta.secondary.join(', ')):''}`:'Custom exercise'}${last?` · Last logged ${last} lb`:''}</div></article>`}).join('')}</div><div class="action-row" style="margin-top:14px"><button class="primary" data-save-program>Save Program Changes</button><button class="secondary" data-route="settings">Cancel</button></div><div class="section-title">Exercise Library</div><article class="macro-card">${(window.BarbarianExercises?.all?.()||[]).map(x=>`<div class="history-row"><b>${esc(x.name)}</b><span>${esc(x.category)}</span><span>${x.min}–${x.max}</span><span>${esc(x.equipment)}</span></div>`).join('')}</article>`;
+  return `<section class="hero"><h2>Edit Program</h2><p>Each exercise carries its own default rep range, muscle mapping, equipment, and progression style. Exercise history is never deleted when you substitute a movement.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Day</label><select id="editorDay" class="select">${daysFor(m).map(d=>`<option ${d===day?'selected':''}>${d}</option>`).join('')}</select></div></div></section><div class="info">Replacing an exercise changes the current program only. Previous exercise logs remain in your history. A replacement uses its own default rep range and any previous weight history for that exact exercise.</div><div class="program-editor-list">${info.exercises.map((ex,i)=>{const meta=window.BarbarianExercises.metadata(ex[0]);const last=findLastExerciseWeight(m,ex[0]);return `<article class="progress-item program-slot" data-slot="${i}"><div class="field-label">Exercise ${i+1}</div><select class="select editor-exercise">${exerciseOptions(ex[0])}</select><div class="editor-grid"><div><label class="field-label">Sets</label><input class="input editor-sets" type="number" min=1 max=10 value="${ex[1]}"></div><div><label class="field-label">Min reps</label><input class="input editor-min" type="number" min=1 max=50 value="${ex[2]}"></div><div><label class="field-label">Max reps</label><input class="input editor-max" type="number" min=1 max=50 value="${ex[3]}"></div></div><div class="muted" style="margin-top:8px">${meta?`${esc(meta.type)} · ${esc(meta.equipment)}${meta.startingResistance!=null?' · Start '+meta.startingResistance+' lb':''} · ${esc(meta.primary)}${meta.secondary.length?' + '+esc(meta.secondary.join(', ')):''}`:'Custom exercise'}${last?` · Last logged ${last} lb`:''}</div></article>`}).join('')}</div><div class="action-row" style="margin-top:14px"><button class="primary" data-save-program>Save Program Changes</button><button class="secondary" data-route="settings">Cancel</button></div><div class="section-title">Exercise Library</div><article class="macro-card">${(window.BarbarianExercises?.all?.()||[]).map(x=>`<div class="history-row"><b>${esc(x.name)}</b><span>${esc(x.category)}</span><span>${x.min}–${x.max}</span><span>${esc(x.equipment)}</span></div>`).join('')}</article>`;
 }
 function findLastExerciseWeight(member,exercise){
   let best=null;
@@ -343,9 +373,9 @@ function saveProgramChanges(){
   state.programs[m][day]=rows.map(row=>{const name=row.querySelector('.editor-exercise').value; const sets=Math.max(1,Number(row.querySelector('.editor-sets').value)||1); const min=Math.max(1,Number(row.querySelector('.editor-min').value)||1); const max=Math.max(min,Number(row.querySelector('.editor-max').value)||min); return [name,sets,min,max];});
   saveState(); toast(`${m} ${day} program saved`); route='home'; state.editorDay=day; render();
 }
-function action(a){const menu=document.getElementById('menuDialog'); if(a.startsWith('route-')){route=a.slice(6);editing=null;if(menu.open)menu.close();render();return} if(a==='close')menu.close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();saveState();render();toast('Local data reset')}}}
+function action(a){const menu=document.getElementById('menuDialog'); if(a.startsWith('route-')){route=a.slice(6);editing=null;if(menu.open)menu.close();render();return} if(a==='close')menu.close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();migrateEquipmentUpgrade();saveState();render();toast('Local data reset')}}}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='barbarian-bulk-backup.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
-document.getElementById('importInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.logs||!x.member)throw new Error();state=x;migratePrograms();saveState();route='home';editing=null;render();toast('Backup imported')}catch(err){alert('That file is not a valid Barbarian Bulk backup.')}};r.readAsText(f);});
+document.getElementById('importInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.logs||!x.member)throw new Error();state=x;migratePrograms();migrateEquipmentUpgrade();saveState();route='home';editing=null;render();toast('Backup imported')}catch(err){alert('That file is not a valid Barbarian Bulk backup.')}};r.readAsText(f);});
 function renderRestTimerControls(){
   const dock=document.getElementById('restTimerDock'); if(!dock || !window.BarbarianRestTimer)return;
   const t=window.BarbarianRestTimer.state; const active=t.running||t.paused||t.remaining>0;

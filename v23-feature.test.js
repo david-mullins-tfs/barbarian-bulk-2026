@@ -1,0 +1,12 @@
+const fs=require('fs'), assert=require('assert');
+const app=fs.readFileSync('app.js','utf8'), lib=fs.readFileSync('exercise-library.js','utf8'), warm=fs.readFileSync('warmup.js','utf8'), sw=fs.readFileSync('sw.js','utf8');
+['Barbell Back Squat','Barbell Bench Press','Barbell Deadlift'].forEach(x=>assert(app.includes(x)));
+['Smith Machine Squat','Smith Machine Bench Press','Smith Machine Deadlift','Plate-Loaded Hack Squat','Plate-Loaded Seated Calf Raise','Plate-Loaded Chest Press'].forEach(x=>assert(lib.includes(x)));
+assert(lib.includes("startingResistance:105"));
+assert(lib.includes("primary:'Calves'"));
+assert(app.includes('migrateEquipmentUpgrade'));
+assert(app.includes('const presets=[0,20,35,45,105,167]'));
+assert(app.includes('Starting weight / resistance'));
+assert(warm.includes("Monday:'Barbell Back Squat'"));
+assert(sw.includes('barbarian-bulk-v23'));
+console.log('v23 equipment tests passed');
