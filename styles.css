@@ -42,3 +42,21 @@ button,input,select{font:inherit}button{color:inherit}button:focus-visible,input
 .note-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;min-height:42px;padding:0 11px;font-size:11px;font-weight:850;white-space:nowrap}.note-btn.has-note{border-color:rgba(255,176,0,.55);color:var(--accent);background:rgba(255,176,0,.08)}.note-btn.compact{width:38px;min-height:38px;padding:0;font-size:15px}.note-dialog{width:min(92vw,520px);padding:16px}.note-dialog-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.note-dialog-head h3{margin:0;font-size:19px}.note-textarea{width:100%;min-height:150px;resize:vertical;margin-top:14px;border:1px solid var(--line);border-radius:14px;background:#0f141b;color:var(--text);padding:12px;font:inherit;line-height:1.45}.note-textarea:focus{outline:3px solid rgba(255,176,0,.35);outline-offset:2px}@media(max-width:460px){.set-table{grid-template-columns:32px 1fr 1fr 36px 24px;gap:6px}.note-btn.compact{width:36px}.workout-head>.note-btn{margin-top:0}}
 /* v21 searchable/filterable notes */
 .notes-search{margin-top:14px}.notes-search .input{width:100%}.notes-filters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.notes-result-summary{margin-top:12px;font-size:12px;color:var(--muted)}.notes-list{display:grid;gap:10px}.note-result{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}.note-result-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.note-result h3{margin:5px 0 0;font-size:16px}.note-type{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:900}.note-meta{font-size:10px;color:var(--muted);white-space:nowrap}.note-result p{margin:12px 0;color:var(--text);white-space:pre-wrap;line-height:1.45}.note-result .secondary{min-height:38px}@media(max-width:760px){.notes-filters{grid-template-columns:1fr 1fr}}@media(max-width:460px){.notes-filters{grid-template-columns:1fr}.note-result-top{flex-direction:column;gap:4px}}
+
+/* v24: visually distinct exercise cards and compact, collapsed warm-up */
+.exercise{background:#1b2531;border:1px solid #435269;border-radius:19px;margin:20px 0;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.16);border-left:4px solid #52647c}
+.exercise.exercise-active{border-left-color:#65a8f5;background:#1c2939}
+.exercise.exercise-complete{border-left-color:var(--good)}
+.exercise-index{font-size:10px;font-weight:850;letter-spacing:.09em;color:#afc0d4;margin-bottom:5px}
+.exercise-head{padding-bottom:12px;border-bottom:1px solid #405066;flex-wrap:wrap}
+.exercise-name{font-size:18px;line-height:1.25}
+.exercise .set-table.header{margin-top:15px}
+.warmup-disclosure{margin-top:12px;background:#141e2a;border:1px solid #405066;border-radius:12px;overflow:hidden}
+.warmup-disclosure summary{padding:12px 13px;cursor:pointer;color:#e7edf5;font-size:12px;font-weight:850;list-style-position:inside}
+.warmup-disclosure summary span{font-weight:500;color:#aebbd0}
+.warmup-disclosure[open] summary{border-bottom:1px solid #405066}
+.warmup-disclosure .warmup-block{margin:8px;border-color:#405066}
+.editor-slot-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.editor-move-controls{display:flex;gap:7px}
+.editor-move-controls button{min-width:43px;min-height:42px;font-size:19px}
+.editor-move-controls button:disabled{opacity:.3}

@@ -27,3 +27,7 @@
 - Added Plate-Loaded Hack Squat (105 lb starting resistance), Plate-Loaded Seated Calf Raise (0 lb), and Plate-Loaded Chest Press (0 lb).
 - Plate Counter now supports machine starting resistance, including 0 and 105 lb presets.
 - Calves are now available as a Weekly Volume muscle category through the seated calf raise.
+
+
+## v24
+Warm-up sections start collapsed, with tap-to-expand details. Program Editor includes move-up/move-down controls that preserve unsaved edits until Save Program Changes. Workout cards have clearer visual hierarchy and status borders.
