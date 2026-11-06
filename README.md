@@ -31,3 +31,10 @@
 
 ## v24
 Warm-up sections start collapsed, with tap-to-expand details. Program Editor includes move-up/move-down controls that preserve unsaved edits until Save Program Changes. Workout cards have clearer visual hierarchy and status borders.
+
+
+## v25 Heritage theme
+- Uses the supplied gold Atlas A artwork as the iPhone/PWA icon (192 and 512 px).
+- Applies Heldkraft palette: Iron Black #151B23, Antique Gold #C59A59, Vintage Cream #E8DCC7, Steel Gray #56616D.
+- Retains Barbarian Bulk app name and all v24 functionality/data keys.
+- Cache version updated to v25. iOS Home Screen icons may require reinstalling the shortcut after exporting a backup; do not delete the app before backing up local data.
