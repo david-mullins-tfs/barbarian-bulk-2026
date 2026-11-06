@@ -1,0 +1,14 @@
+const fs=require('fs'); const assert=require('assert');
+const html=fs.readFileSync('index.html','utf8');
+const css=fs.readFileSync('styles.css','utf8');
+const app=fs.readFileSync('app.js','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+const nav=(html.match(/<nav class="bottom-nav"[\s\S]*?<\/nav>/)||[''])[0];
+assert.equal((nav.match(/class="nav-btn/g)||[]).length,5);
+['Workout','Volume','Macros','Cardio','Notes'].forEach(x=>assert(nav.includes(x)));
+['Progress','Plate Counter','Program Editor','Settings'].forEach(x=>assert(html.includes(`>${x}`)||html.includes(`${x}</button>`)));
+assert(css.includes('repeat(5,minmax(0,1fr))'));
+assert(css.includes('112px + env(safe-area-inset-bottom)'));
+assert(app.includes("a.startsWith('route-')"));
+assert(sw.includes('barbarian-bulk-v22'));
+console.log('v22 navigation tests passed');
