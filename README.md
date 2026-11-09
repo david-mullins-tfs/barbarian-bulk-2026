@@ -67,3 +67,7 @@ Pec Deck, Barbell Bench Press and Barbell Back Squat now use vintage illustrated
 
 ## v30 movement-position corrections
 Expanded detail screens for Pec Deck, Barbell Bench Press and Barbell Back Squat now include paired, explicitly drawn start/finish movement schematics. These schematics are not anatomical coaching illustrations and do not replace equipment instructions or professional guidance. The existing golden-era hero art is unchanged pending visual approval.
+
+## v31 squat artwork pilot
+
+Replaced the Barbell Back Squat stick-figure start/finish illustrations with cropped vintage-engraving artwork from the approved visual concept. The card/hero uses the same rear-view squat illustration. Pec Deck and Bench Press remain unchanged from v30. This is a visual review build; do not treat AI-generated illustrations as verified exercise coaching.
