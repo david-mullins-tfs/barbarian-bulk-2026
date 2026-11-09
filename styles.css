@@ -129,3 +129,16 @@ body{background:#151B23;color:#E8DCC7}
 .atlas-detail-grid strong{font-size:13px;color:#E8DCC7}
 .atlas-detail-note{font-size:12px;line-height:1.5;color:#B8C2CB}
 @media(max-width:410px){.exercise-illustration{flex-basis:80px;width:80px;height:78px}.exercise-heading{min-width:110px}.exercise-name{font-size:16px}}
+
+/* Atlas dual-illustration pilot */
+.atlas-pilot-positions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.atlas-pilot-positions>div,.atlas-pilot-cues{background:#17222D;border:1px solid #56616D;border-radius:12px;padding:12px}
+.atlas-pilot-positions small,.atlas-pilot-cues small{display:block;color:#C59A59;font-size:11px;letter-spacing:.08em;font-weight:700;margin-bottom:6px}
+.atlas-pilot-positions span{display:block;color:#E8DCC7;font-size:12px;line-height:1.5}
+.atlas-pilot-cues ul{margin:7px 0 0;padding-left:20px;color:#E8DCC7;font-size:13px;line-height:1.65}
+
+/* v30: technical movement position schematics */
+.atlas-position-art{width:100%;height:auto;aspect-ratio:7/5;object-fit:contain;display:block;background:#151B23;border:1px solid #56616D;border-radius:10px;margin:7px 0}
+.atlas-pilot-positions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.atlas-pilot-positions>div{min-width:0}
+.atlas-pilot-positions span{font-size:.78rem;line-height:1.35;display:block}

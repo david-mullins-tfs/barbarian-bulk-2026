@@ -58,3 +58,12 @@ Warm-up sections start collapsed, with tap-to-expand details. Program Editor inc
 
 ## v28 illustrated Atlas workout cards
 Original lightweight SVG movement studies for all library exercises are bundled in `exercise-art/` and cached for offline use. Tap an illustration for an exercise information panel. Illustrations are stylized references, not detailed coaching instructions. Existing storage keys, program logic, notes, and progression are unchanged.
+
+
+## v29: Three-exercise dual-style illustration pilot
+
+Pec Deck, Barbell Bench Press and Barbell Back Squat now use vintage illustrated thumbnails and larger detail views with text descriptions of start/finish positions and setup cues. Other exercises retain the v28 SVG illustrations. The three new images are **visual concept crops**, not independently verified anatomical instruction. This is an opt-in pilot for visual review; do not treat illustrations as technique coaching. The local data key is unchanged.
+
+
+## v30 movement-position corrections
+Expanded detail screens for Pec Deck, Barbell Bench Press and Barbell Back Squat now include paired, explicitly drawn start/finish movement schematics. These schematics are not anatomical coaching illustrations and do not replace equipment instructions or professional guidance. The existing golden-era hero art is unchanged pending visual approval.
