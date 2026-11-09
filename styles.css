@@ -142,3 +142,7 @@ body{background:#151B23;color:#E8DCC7}
 .atlas-pilot-positions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .atlas-pilot-positions>div{min-width:0}
 .atlas-pilot-positions span{font-size:.78rem;line-height:1.35;display:block}
+
+/* v32: genuine engraved start/finish illustrations, no stick-figure schematics */
+.atlas-position-art{height:clamp(140px,33vw,230px);aspect-ratio:auto;object-fit:contain;background:#101820;padding:3px}
+@media(max-width:420px){.atlas-pilot-positions>div{padding:8px}.atlas-position-art{height:170px}}

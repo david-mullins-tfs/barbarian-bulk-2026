@@ -71,3 +71,7 @@ Expanded detail screens for Pec Deck, Barbell Bench Press and Barbell Back Squat
 ## v31 squat artwork pilot
 
 Replaced the Barbell Back Squat stick-figure start/finish illustrations with cropped vintage-engraving artwork from the approved visual concept. The card/hero uses the same rear-view squat illustration. Pec Deck and Bench Press remain unchanged from v30. This is a visual review build; do not treat AI-generated illustrations as verified exercise coaching.
+
+
+## v32 illustrated start/finish panels
+Replaced all six pilot start/finish stick-figure schematics with vintage engraved WebP illustration assets for Pec Deck, Barbell Bench Press and Barbell Back Squat. The 39-exercise library retains existing illustrations for other exercises. Artwork is a visual reference and is not a validated coaching diagram. Data storage is unchanged.
