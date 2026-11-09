@@ -45,3 +45,12 @@ Warm-up sections start collapsed, with tap-to-expand details. Program Editor inc
 - On workout cards, Swap exercise offers **This workout only** or **Rest of program**. One-day swaps use session overrides and do not change the program; permanent swaps update the member's program while retaining earlier weeks.
 - Skip today hides an exercise from this session and excludes it from that session's completion/volume; Restore reverses the skip. Existing logs are not deleted.
 - Atlas icon's black background has been harmonized with Iron Black.
+
+
+## v27 — Atlas UI
+- Atlas by Heldkraft Performance Research branding and golden-era palette.
+- Distinctive exercise cards and compact three-dot exercise action menu.
+- Original swap/skip actions retained inside the menu; all data keys unchanged.
+- PWA name Atlas; Barbarian Bulk remains the training program.
+- Deploy all files at the repository root, not an enclosing folder.
+- Export a JSON backup before upgrading. Do not delete the installed iPhone PWA until your data is safely backed up.

@@ -71,3 +71,41 @@ button,input,select{font:inherit}button{color:inherit}button:focus-visible,input
 .warmup-disclosure{background:#19232E}
 
 .exercise-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.exercise-actions button{flex:1;min-width:125px}.skipped-exercise{opacity:.7;border-style:dashed}.swap-option{display:flex;gap:10px;align-items:center;padding:10px 0;color:var(--text);font-size:14px}.swap-option input{accent-color:#C59A59}
+
+/* v27: Heldkraft Atlas heritage interface — dark, gold, high legibility */
+:root{--bg:#151B23;--panel:#202A35;--panel2:#273440;--text:#E8DCC7;--muted:#B8C2CB;--accent:#C59A59;--line:#56616D}
+body{background:#151B23;color:#E8DCC7}
+.app-header{background:#151B23;border-bottom:1px solid rgba(197,154,89,.24)}
+.app-header .eyebrow{color:#C59A59;letter-spacing:.15em;font-size:9px}
+.app-header h1{color:#E8DCC7;letter-spacing:.15em;font-family:Georgia,serif;font-size:22px}
+.header-program{font:600 11px system-ui,sans-serif;letter-spacing:0;color:#AAB7C7;vertical-align:middle}
+.hero{background:linear-gradient(150deg,#263440,#19232D);border:1px solid rgba(197,154,89,.28)}
+.hero h2,.workout-head h2{color:#E8DCC7}
+.section-title{color:#D7BA89;letter-spacing:.09em}
+.exercise{background:#202A35!important;border:1px solid #56616D;border-left:3px solid #758394!important;border-radius:19px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:16px;margin:20px 0}
+.exercise.exercise-active{border-left-color:#C59A59!important;background:#253442!important}
+.exercise.exercise-complete{border-left-color:#72BD91!important}
+.exercise-head{border-bottom:1px solid rgba(232,220,199,.18);padding-bottom:13px;gap:8px}
+.exercise-index{color:#C59A59;font-size:10px;letter-spacing:.12em}
+.exercise-name{font-size:19px;font-weight:850;color:#F5EADB}
+.exercise .range{color:#C4CFD7}
+.exercise-more{margin:10px 0 6px;position:relative}
+.exercise-more>summary{list-style:none;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(197,154,89,.55);color:#EAC17D;border-radius:12px;min-height:38px;padding:0 13px;cursor:pointer;font-weight:900;letter-spacing:2px;background:#17222D}
+.exercise-more>summary::-webkit-details-marker{display:none}
+.exercise-more>summary span{font-size:11px;letter-spacing:0;font-weight:750}
+.exercise-more[open]>summary{background:#3A3026}
+.exercise-more .exercise-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#18222C;border:1px solid #56616D;border-radius:12px;padding:9px;margin:8px 0 0}
+.exercise-more .exercise-actions button{min-width:0;min-height:44px}
+.mini-input,.input,.select{background:#18222D!important;color:#F1E7D7!important;border-color:#56616D!important}
+.mini-input:focus,.input:focus,.select:focus{outline:2px solid rgba(197,154,89,.65);outline-offset:1px}
+.set-table.header{color:#C59A59;letter-spacing:.08em;text-transform:uppercase}
+.metrics .metric{background:#18232E;border:1px solid #485969;border-radius:12px}
+.metrics .value{color:#F2E5D0}
+.primary{background:linear-gradient(135deg,#E2B875,#C59A59)!important;color:#151B23!important;font-weight:900;border-radius:12px}
+.secondary{border-color:#56616D;color:#E8DCC7;background:#25313E}
+.bottom-nav{background:#151B23;border-top:1px solid rgba(197,154,89,.3)}
+.bottom-nav .nav-btn.active{color:#E6BA72}
+.warmup-disclosure{background:#17222D;border-color:#485969}
+.note-btn.has-note{border-color:#C59A59}
+.menu-dialog,.note-dialog,.plate-dialog{background:#1C2732;color:#E8DCC7;border:1px solid #56616D}
+@media(max-width:460px){.app-header h1{font-size:20px}.header-program{font-size:9px}.exercise{padding:13px}.exercise-more .exercise-actions{grid-template-columns:1fr}.exercise-more .exercise-actions button{width:100%}}
