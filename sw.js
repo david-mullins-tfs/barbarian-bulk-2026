@@ -1,8 +1,9 @@
-const CACHE = 'heldkraft-atlas-v27';
+const CACHE = 'heldkraft-atlas-v28';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
   './volume.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
-  './icons/icon-192.png', './icons/icon-512.png'
+  './icons/icon-192.png', './icons/icon-512.png',
+  './exercise-art/front-squat.svg', './exercise-art/barbell-back-squat.svg', './exercise-art/smith-machine-squat.svg', './exercise-art/plate-loaded-hack-squat.svg', './exercise-art/plate-loaded-seated-calf-raise.svg', './exercise-art/lunges.svg', './exercise-art/leg-press.svg', './exercise-art/leg-curls.svg', './exercise-art/barbell-deadlift.svg', './exercise-art/smith-machine-deadlift.svg', './exercise-art/rdl.svg', './exercise-art/yes-machine.svg', './exercise-art/no-machine.svg', './exercise-art/barbell-bench-press.svg', './exercise-art/smith-machine-bench-press.svg', './exercise-art/incline-bench.svg', './exercise-art/db-bench.svg', './exercise-art/pec-deck.svg', './exercise-art/db-fly.svg', './exercise-art/cable-fly.svg', './exercise-art/machine-chest-press.svg', './exercise-art/plate-loaded-chest-press.svg', './exercise-art/close-grip-bench.svg', './exercise-art/incline-db-press.svg', './exercise-art/overhead-press.svg', './exercise-art/seated-db-press.svg', './exercise-art/lateral-raise.svg', './exercise-art/rear-delt-fly.svg', './exercise-art/pullups.svg', './exercise-art/assisted-chin-ups.svg', './exercise-art/lat-pulldown.svg', './exercise-art/landmine-row.svg', './exercise-art/chest-supported-row.svg', './exercise-art/cable-row.svg', './exercise-art/ez-curl.svg', './exercise-art/incline-db-curl.svg', './exercise-art/hammer-curl.svg', './exercise-art/cable-bent-over-triceps-extension.svg', './exercise-art/triceps-pushdown.svg'
 ];
 
 self.addEventListener('install', event => {

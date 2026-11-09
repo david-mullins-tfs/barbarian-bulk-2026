@@ -109,3 +109,23 @@ body{background:#151B23;color:#E8DCC7}
 .note-btn.has-note{border-color:#C59A59}
 .menu-dialog,.note-dialog,.plate-dialog{background:#1C2732;color:#E8DCC7;border:1px solid #56616D}
 @media(max-width:460px){.app-header h1{font-size:20px}.header-program{font-size:9px}.exercise{padding:13px}.exercise-more .exercise-actions{grid-template-columns:1fr}.exercise-more .exercise-actions button{width:100%}}
+
+
+/* v28: original offline exercise studies and clearer illustrated workout headers */
+.exercise-head{display:flex;align-items:center;gap:12px}
+.exercise-heading{flex:1;min-width:155px}
+.exercise-illustration{flex:0 0 108px;width:108px;height:92px;border:1px solid rgba(197,154,89,.38);background:#17222D;border-radius:14px;overflow:hidden;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.exercise-illustration img{width:100%;height:100%;object-fit:contain;display:block}
+.exercise-illustration:focus-visible{outline:3px solid #C59A59;outline-offset:2px}
+.exercise-illustration:hover{border-color:#C59A59}
+.exercise-head .plate-quick{margin-left:auto}
+.atlas-detail-dialog{width:min(94vw,500px);max-height:85vh;overflow-y:auto;padding:18px;border-radius:20px}
+.atlas-detail-top{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.atlas-detail-top h2{margin:4px 0 12px;color:#E8DCC7;font-family:Georgia,serif}
+.atlas-detail-art{display:block;width:100%;max-height:275px;object-fit:contain;border-radius:16px;background:#17222D;border:1px solid #56616D}
+.atlas-detail-grid{display:grid;gap:10px;margin:14px 0}
+.atlas-detail-grid>div{padding:11px;border:1px solid #56616D;border-radius:12px;background:#17222D}
+.atlas-detail-grid small{display:block;color:#C59A59;font-size:10px;letter-spacing:.07em;margin-bottom:4px}
+.atlas-detail-grid strong{font-size:13px;color:#E8DCC7}
+.atlas-detail-note{font-size:12px;line-height:1.5;color:#B8C2CB}
+@media(max-width:410px){.exercise-illustration{flex-basis:80px;width:80px;height:78px}.exercise-heading{min-width:110px}.exercise-name{font-size:16px}}

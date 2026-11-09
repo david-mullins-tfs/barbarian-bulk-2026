@@ -54,3 +54,7 @@ Warm-up sections start collapsed, with tap-to-expand details. Program Editor inc
 - PWA name Atlas; Barbarian Bulk remains the training program.
 - Deploy all files at the repository root, not an enclosing folder.
 - Export a JSON backup before upgrading. Do not delete the installed iPhone PWA until your data is safely backed up.
+
+
+## v28 illustrated Atlas workout cards
+Original lightweight SVG movement studies for all library exercises are bundled in `exercise-art/` and cached for offline use. Tap an illustration for an exercise information panel. Illustrations are stylized references, not detailed coaching instructions. Existing storage keys, program logic, notes, and progression are unchanged.

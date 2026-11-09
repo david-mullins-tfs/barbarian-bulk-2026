@@ -189,13 +189,23 @@ function warmupView(day,ex,workingWeight){
   return `<div class="warmup-block"><div class="warmup-title">Suggested warm-up · ${kind==='main'?'full ramp':'acclimation'}</div>${ramp.map((x,i)=>`<div class="warmup-row"><div><b>${x.weight} lb × ${x.reps}</b><span>Warm-up ${i+1} · rest ${window.BarbarianRest.formatTime(x.rest)}</span></div><button class="secondary warmup-rest" data-warmup-rest="${x.rest}" data-warmup-label="${esc(ex[0])} warm-up ${i+1}">▶ Rest ${window.BarbarianRest.formatTime(x.rest)}</button></div>`).join('')}<div class="warmup-foot">Based on ${w} lb working weight. Warm-ups are suggestions and do not count toward Weekly Volume or double progression.</div></div>`;
 }
 
+function exerciseArt(name){return './exercise-art/'+String(name).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.svg';}
+function openExerciseDetail(name){
+  const meta=window.BarbarianExercises?.metadata(name);
+  const dlg=document.getElementById('exerciseDetailDialog'); if(!dlg)return;
+  const muscles=meta?[meta.primary,...(meta.secondary||[])].join(' · '):'Not categorized';
+  const range=meta?`${meta.min}–${meta.max} reps`:'See programmed sets';
+  dlg.innerHTML=`<div class="atlas-detail-top"><div><div class="exercise-index">ATLAS MOVEMENT LIBRARY</div><h2>${esc(name)}</h2></div><button type="button" class="icon-btn" data-detail-close aria-label="Close details">×</button></div><img class="atlas-detail-art" src="${exerciseArt(name)}" alt="Stylized ${esc(name)} movement study"><div class="atlas-detail-grid"><div><small>PRIMARY / SECONDARY</small><strong>${esc(muscles)}</strong></div><div><small>DEFAULT TARGET</small><strong>${range}</strong></div><div><small>EQUIPMENT</small><strong>${esc(meta?.equipment||'See exercise')}</strong></div></div><p class="atlas-detail-note">Illustration is a stylized movement reference, not a technical coaching diagram. Use a controlled range of motion and adjust setup to your equipment and comfort.</p>`;
+  dlg.querySelector('[data-detail-close]').onclick=()=>dlg.close();
+  dlg.showModal();
+}
 function exerciseCard(m,w,day,ex,index=0){
   if(ex[1]===0) return `<article class="exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">Each</div></div></div><p class="muted" style="margin:12px 0 0">Accessory/superset note from the original program.</p></article>`;
   const log=sessionRows(m,w,day,ex[0]); const mt=metrics(log,ex); const suggested=log.workingWeight||0; const isSaved=getLog(m,w,day,ex[0]);
   const loggedCount=log.sets.filter(s=>s.reps!=='' && s.reps!=null && Number(s.reps)>0).length;
   const status=loggedCount>=ex[1]?'complete':loggedCount>0?'active':'ready';
   const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
-  return `<article class="exercise exercise-${status}" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-index">EXERCISE ${String(index+1).padStart(2,'0')} · ${status==='complete'?'COMPLETE':status==='active'?'IN PROGRESS':'READY'}</div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div><button class="plate-quick" data-plate-ex="${esc(ex[0])}" data-plate-weight="${suggested||''}" aria-label="Plate count for ${esc(ex[0])}">🧮 ${suggested?suggested+' lb':'Plates'}</button>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
+  return `<article class="exercise exercise-${status}" data-exercise="${esc(ex[0])}"><div class="exercise-head"><button type="button" class="exercise-illustration" data-exercise-detail="${esc(ex[0])}" aria-label="View ${esc(ex[0])} exercise details"><img src="${exerciseArt(ex[0])}" alt="${esc(ex[0])} movement illustration" loading="lazy" width="110" height="88"></button><div class="exercise-heading"><div class="exercise-index">EXERCISE ${String(index+1).padStart(2,'0')} · ${status==='complete'?'COMPLETE':status==='active'?'IN PROGRESS':'READY'}</div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div><button class="plate-quick" data-plate-ex="${esc(ex[0])}" data-plate-weight="${suggested||''}" aria-label="Plate count for ${esc(ex[0])}">🧮 ${suggested?suggested+' lb':'Plates'}</button>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
     <details class="exercise-more"><summary aria-label="Exercise options for ${esc(ex[0])}" title="Exercise options">••• <span>Options</span></summary><div class="exercise-actions"><button type="button" class="secondary" data-swap-slot="${index}">⇄ Swap exercise</button><button type="button" class="secondary" data-skip-slot="${index}">▷ Skip for today</button></div></details>
     <div class="warmup-slot"><details class="warmup-disclosure"><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(day,ex,suggested)}</details></div>
     <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div>Note</div><div></div></div>
@@ -324,6 +334,7 @@ function bind(){
   document.querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{route=b.dataset.route;editing=null;render()});
   document.querySelectorAll('[data-open-day]').forEach(b=>b.onclick=()=>{const day=b.dataset.openDay,k=[state.member,state.week,day].join('|');state.programSnapshots ||= {};if(!state.programSnapshots[k]){state.programSnapshots[k]=cloneExercises(programFor(state.member)[day].exercises);saveState();}editing={week:state.week,day};render()});
   document.querySelectorAll('[data-save-ex]').forEach(b=>b.onclick=()=>saveExercise(b.dataset.saveEx));
+  document.querySelectorAll('[data-exercise-detail]').forEach(b=>b.onclick=()=>openExerciseDetail(b.dataset.exerciseDetail));
   document.querySelectorAll('[data-swap-slot]').forEach(b=>b.onclick=()=>openSwapDialog(Number(b.dataset.swapSlot)));
   document.querySelectorAll('[data-skip-slot]').forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.skipSlot),ex=planForSession(state.member,editing.week)[editing.day].exercises[i];
