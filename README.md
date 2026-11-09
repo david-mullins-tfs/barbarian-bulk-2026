@@ -38,3 +38,10 @@ Warm-up sections start collapsed, with tap-to-expand details. Program Editor inc
 - Applies Heldkraft palette: Iron Black #151B23, Antique Gold #C59A59, Vintage Cream #E8DCC7, Steel Gray #56616D.
 - Retains Barbarian Bulk app name and all v24 functionality/data keys.
 - Cache version updated to v25. iOS Home Screen icons may require reinstalling the shortcut after exporting a backup; do not delete the app before backing up local data.
+
+
+## v26: flexible sessions
+- Added Front Squat (45-lb bar), Cable Bent-over Triceps Extension, and Landmine Row (45-lb bar) to the library.
+- On workout cards, Swap exercise offers **This workout only** or **Rest of program**. One-day swaps use session overrides and do not change the program; permanent swaps update the member's program while retaining earlier weeks.
+- Skip today hides an exercise from this session and excludes it from that session's completion/volume; Restore reverses the skip. Existing logs are not deleted.
+- Atlas icon's black background has been harmonized with Iron Black.

@@ -1,5 +1,6 @@
 (function(){
   const LIBRARY = {
+    'Front Squat': {category:'Legs', primary:'Quads', secondary:['Glutes','Core'], type:'compound', min:6,max:10,equipment:'Half Rack / Barbell', startingResistance:45},
     'Barbell Back Squat': {category:'Legs', primary:'Quads', secondary:['Glutes','Hamstrings'], type:'compound', min:6,max:8,equipment:'Half Rack / Barbell', startingResistance:45},
     'Smith Machine Squat': {category:'Legs', primary:'Quads', secondary:['Glutes','Hamstrings'], type:'compound', min:6,max:8,equipment:'Smith Machine'},
     'Plate-Loaded Hack Squat': {category:'Legs', primary:'Quads', secondary:['Glutes','Hamstrings'], type:'compound', min:8,max:12,equipment:'Plate-Loaded Machine', startingResistance:105},
@@ -30,11 +31,13 @@
     'Pullups': {category:'Back', primary:'Back', secondary:['Biceps'], type:'compound', min:6,max:9,equipment:'Bodyweight'},
     'Assisted Chin-Ups': {category:'Back', primary:'Back', secondary:['Biceps'], type:'compound', min:8,max:12,equipment:'Machine'},
     'Lat Pulldown': {category:'Back', primary:'Back', secondary:['Biceps'], type:'compound', min:8,max:12,equipment:'Cable/Machine'},
+    'Landmine Row': {category:'Back', primary:'Back', secondary:['Biceps','Rear Delts'], type:'compound', min:8,max:12,equipment:'Landmine / 45 lb Barbell', startingResistance:45},
     'Chest-Supported Row': {category:'Back', primary:'Back', secondary:['Biceps','Rear Delts'], type:'compound', min:10,max:12,equipment:'Machine/Dumbbell'},
     'Cable Row': {category:'Back', primary:'Back', secondary:['Biceps','Rear Delts'], type:'compound', min:8,max:12,equipment:'Cable'},
     'EZ Curl': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:10,max:12,equipment:'EZ Bar'},
     'Incline DB Curl': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:8,max:12,equipment:'Dumbbell'},
     'Hammer Curl': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:10,max:15,equipment:'Dumbbell'},
+    'Cable Bent-over Triceps Extension': {category:'Triceps', primary:'Triceps', secondary:[], type:'isolation', min:10,max:15,equipment:'Cable'},
     'Triceps Pushdown': {category:'Triceps', primary:'Triceps', secondary:[], type:'isolation', min:10,max:12,equipment:'Cable'},
   };
   const categories=[...new Set(Object.values(LIBRARY).map(x=>x.category))];

@@ -62,6 +62,29 @@ function migrateEquipmentUpgrade(){
   state.notes=migratedNotes;
   state.equipmentUpgradeV23=true;
 }
+function sessionId(member,week,day,index){return [member,week,day,index].join('|')}
+function planForSession(member,week){
+  const plan=programFor(member);
+  const snapshots=state.programSnapshots||{};
+  for(const day of Object.keys(plan)){
+    const snapshot=snapshots[[member,week,day].join('|')];
+    if(snapshot)plan[day].exercises=cloneExercises(snapshot);
+    plan[day].exercises=plan[day].exercises.map((ex,i)=>{
+      const replacement=state.sessionSwaps?.[sessionId(member,week,day,i)];
+      return replacement? [...replacement]:ex;
+    });
+  }
+  return plan;
+}
+function isSkipped(member,week,day,index){return !!state.skippedExercises?.[sessionId(member,week,day,index)]}
+function snapshotCurrentPrograms(member){
+  state.programSnapshots ||= {};
+  const plan=programFor(member);
+  for(let w=1;w<=state.week;w++)for(const day of Object.keys(plan)){
+    const k=[member,w,day].join('|');
+    if(!state.programSnapshots[k])state.programSnapshots[k]=cloneExercises(plan[day].exercises);
+  }
+}
 function programFor(member){
   migratePrograms();
   const base=baseProgramFor(member);
@@ -104,7 +127,7 @@ function noteButton(scope,label,member,week,day,exercise,setIndex,compact=false)
 function getLog(member,week,day,exercise){return state.logs[key(member,week,day,exercise)] || null}
 function targetText(ex){return ex[3]==null?'Each':`${ex[2]}–${ex[3]}`}
 function sessionRows(member,week,day,exercise){
-  const plan=programFor(member);
+  const plan=planForSession(member,week);
   const ex=plan[day]?.exercises.find(x=>x[0]===exercise); if(!ex) return null;
   const existing=getLog(member,week,day,exercise);
   if(existing){
@@ -129,7 +152,7 @@ function metrics(log,ex){
   return {top:Math.max(0,...weights),reps:repsTotal,volume,ready};
 }
 function dayComplete(member,week,day){
-  return programFor(member)[day].exercises.every(ex=>{const l=getLog(member,week,day,ex[0]); return ex[1]===0 ? true : !!l && l.sets.length===ex[1] && l.sets.every(s=>s.reps!=='');});
+  return planForSession(member,week)[day].exercises.every((ex,i)=>{if(isSkipped(member,week,day,i))return true;const l=getLog(member,week,day,ex[0]); return ex[1]===0 ? true : !!l && l.sets.length===ex[1] && l.sets.every(s=>s.reps!=='');});
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
@@ -145,12 +168,12 @@ function homeView(){
   </section><div class="section-title">Training days</div><div class="day-grid">${days.map(day=>dayCard(m,w,day)).join('')}</div>
   <div class="section-title">Program notes</div><div class="info">Choose a starting weight. Keep that weight until all target sets reach the top of the range. Then add 5 lb next session and start the rep target back at the bottom.</div>`;
 }
-function dayCard(m,w,day){const plan=programFor(m),done=dayComplete(m,w,day), n=plan[day].exercises.length;return `<button class="day-card" data-open-day="${day}" style="text-align:left"><div class="day-top"><div><div class="day-name">${day}</div><div class="focus">${plan[day].focus} · ${n} exercises</div></div><div class="done-dot ${done?'done':''}"></div></div><div class="action-row" style="margin-top:12px"><span class="secondary" style="display:flex;align-items:center;justify-content:center">${done?'Review':'Start workout'}</span></div></button>`}
+function dayCard(m,w,day){const plan=planForSession(m,w),done=dayComplete(m,w,day), n=plan[day].exercises.length;return `<button class="day-card" data-open-day="${day}" style="text-align:left"><div class="day-top"><div><div class="day-name">${day}</div><div class="focus">${plan[day].focus} · ${n} exercises</div></div><div class="done-dot ${done?'done':''}"></div></div><div class="action-row" style="margin-top:12px"><span class="secondary" style="display:flex;align-items:center;justify-content:center">${done?'Review':'Start workout'}</span></div></button>`}
 
 function workoutView(week,day){
-  const m=state.member, info=programFor(m)[day];
+  const m=state.member, info=planForSession(m,week)[day];
   return `<div class="workout-head"><div><button class="back" data-back>← Back</button><h2 style="margin-top:14px">${day} · Week ${week}</h2><p>${esc(info.focus)}</p></div>${noteButton('workout',day+' workout',m,week,day)}</div>
-    ${info.exercises.map((ex,i)=>exerciseCard(m,week,day,ex,i)).join('')}
+    ${info.exercises.map((ex,i)=>isSkipped(m,week,day,i)?`<article class="exercise skipped-exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Skipped for this workout</div></div><button class="secondary" data-unskip="${i}">Restore</button></div></article>`:exerciseCard(m,week,day,ex,i)).join('')}
     <div class="action-row" style="margin:18px 0 6px"><button class="primary" data-finish-workout>Save ${day}</button></div>`;
 }
 
@@ -173,6 +196,7 @@ function exerciseCard(m,w,day,ex,index=0){
   const status=loggedCount>=ex[1]?'complete':loggedCount>0?'active':'ready';
   const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
   return `<article class="exercise exercise-${status}" data-exercise="${esc(ex[0])}"><div class="exercise-head"><div><div class="exercise-index">EXERCISE ${String(index+1).padStart(2,'0')} · ${status==='complete'?'COMPLETE':status==='active'?'IN PROGRESS':'READY'}</div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div><button class="plate-quick" data-plate-ex="${esc(ex[0])}" data-plate-weight="${suggested||''}" aria-label="Plate count for ${esc(ex[0])}">🧮 ${suggested?suggested+' lb':'Plates'}</button>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
+    <div class="exercise-actions"><button type="button" class="secondary" data-swap-slot="${index}">⇄ Swap exercise</button><button type="button" class="secondary" data-skip-slot="${index}">Skip today</button></div>
     <div class="warmup-slot"><details class="warmup-disclosure"><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(day,ex,suggested)}</details></div>
     <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div>Note</div><div></div></div>
     ${log.sets.map((s,i)=>`<div class="set-table"><div class="set-num">${i+1}</div><input class="mini-input set-weight" inputmode="decimal" type="number" min="0" step="5" value="${s.weight??''}" aria-label="${ex[0]} set ${i+1} weight"><input class="mini-input set-reps" inputmode="numeric" type="number" min="0" step="1" placeholder="${ex[2]}-${ex[3]}" value="${s.reps??''}" aria-label="${ex[0]} set ${i+1} reps">${noteButton('set',ex[0]+' set '+(i+1),m,w,day,ex[0],i,true)}<div class="set-status ${ex[3]!=null && Number(s.reps)>=ex[3]?'good':'bad'}">${ex[3]!=null&&Number(s.reps)>=ex[3]?'✓':'•'}</div></div>`).join('')}
@@ -188,7 +212,7 @@ return `<section class="hero"><h2>${esc(m)} · Progress</h2><p>Track working wei
 function progressItem(m,ex){const values=[];for(let w=1;w<=WEEKS;w++){let found=null;for(const d of daysFor(m)){const l=getLog(m,w,d,ex[0]);if(l){const mt=metrics(l,ex);found=mt.top||l.workingWeight||0;break}}values.push(found||0)}const best=Math.max(0,...values);return `<article class="progress-item"><div class="top"><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Best ${best||'—'} lb</div></div><div class="mini-grid">${values.map((v,i)=>`<div class="week-chip ${i+1===state.week?'active':''}"><div class="w">W${i+1}</div><div class="v">${v||'—'}</div></div>`).join('')}</div></article>`}
 
 
-function volumeView(){const m=state.member,w=state.week,plan=programFor(m),planned=Volume.programmedVolume(plan,MUSCLE_MAP),done=Volume.completedVolume(state.logs,plan,MUSCLE_MAP,m,w);const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];const shoulderProgram=shoulderParts.reduce((n,x)=>n+(planned[x]||0),0);const shoulderDone=shoulderParts.reduce((n,x)=>n+(done[x]||0),0);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderProgram.toFixed(1)}</div><div class="volume-number">${shoulderDone.toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderProgram)}">${Volume.classifyVolume(shoulderProgram)}</div></div><div class="info">Shoulder total combines general delts plus front, side, and rear-delt weighted credits. Individual rows remain below for detail.</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
+function volumeView(){const m=state.member,w=state.week,plan=planForSession(m,w);for(const day of Object.keys(plan))plan[day].exercises=plan[day].exercises.filter((_,i)=>!isSkipped(m,w,day,i));const planned=Volume.programmedVolume(plan,MUSCLE_MAP),done=Volume.completedVolume(state.logs,plan,MUSCLE_MAP,m,w);const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];const shoulderProgram=shoulderParts.reduce((n,x)=>n+(planned[x]||0),0);const shoulderDone=shoulderParts.reduce((n,x)=>n+(done[x]||0),0);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderProgram.toFixed(1)}</div><div class="volume-number">${shoulderDone.toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderProgram)}">${Volume.classifyVolume(shoulderProgram)}</div></div><div class="info">Shoulder total combines general delts plus front, side, and rear-delt weighted credits. Individual rows remain below for detail.</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
 
 function macrosView(){
   const m=state.member,n=nutritionState(m),date=document.getElementById('macroDate')?.value||todayKey(),d=n.days[date]||{protein:'',fat:'',carbs:'',weight:'',dayType:'training'},base=n.targets, snapshot=d.targetSnapshot||base;
@@ -298,8 +322,15 @@ function bind(){
   });
   document.querySelectorAll('.editor-exercise').forEach(sel=>sel.onchange=()=>{const row=sel.closest('.program-slot');const meta=window.BarbarianExercises.metadata(sel.value);if(!row||!meta)return;row.querySelector('.editor-min').value=meta.min;row.querySelector('.editor-max').value=meta.max;const info=row.querySelector('.muted');if(info)info.textContent=`${meta.type} · ${meta.equipment} · ${meta.primary}${meta.secondary.length?' + '+meta.secondary.join(', '):''}`;});
   document.querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{route=b.dataset.route;editing=null;render()});
-  document.querySelectorAll('[data-open-day]').forEach(b=>b.onclick=()=>{editing={week:state.week,day:b.dataset.openDay};render()});
+  document.querySelectorAll('[data-open-day]').forEach(b=>b.onclick=()=>{const day=b.dataset.openDay,k=[state.member,state.week,day].join('|');state.programSnapshots ||= {};if(!state.programSnapshots[k]){state.programSnapshots[k]=cloneExercises(programFor(state.member)[day].exercises);saveState();}editing={week:state.week,day};render()});
   document.querySelectorAll('[data-save-ex]').forEach(b=>b.onclick=()=>saveExercise(b.dataset.saveEx));
+  document.querySelectorAll('[data-swap-slot]').forEach(b=>b.onclick=()=>openSwapDialog(Number(b.dataset.swapSlot)));
+  document.querySelectorAll('[data-skip-slot]').forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.skipSlot),ex=planForSession(state.member,editing.week)[editing.day].exercises[i];
+    if(!confirm(`Skip ${ex[0]} for this workout? The program and prior logs stay unchanged.`))return;
+    persistAllVisibleExercises();state.skippedExercises ||= {};state.skippedExercises[sessionId(state.member,editing.week,editing.day,i)]=true;saveState();render();
+  });
+  document.querySelectorAll('[data-unskip]').forEach(b=>b.onclick=()=>{delete state.skippedExercises[sessionId(state.member,editing.week,editing.day,Number(b.dataset.unskip))];saveState();render()});
   document.querySelectorAll('[data-rest-start]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.restStart));
   document.querySelectorAll('[data-plate-ex]').forEach(b=>b.onclick=()=>openPlateDialog(b.dataset.plateEx,b.dataset.plateWeight));
   const pc=document.querySelector('.plate-controls');if(pc&&route==='plates')bindPlateControls(document.getElementById('app'));
@@ -328,6 +359,36 @@ function bind(){
   const md=document.getElementById('macroDate');if(md)md.onchange=()=>render(); const sm=document.getElementById('saveMacros');if(sm)sm.onclick=saveMacroDay; const st=document.getElementById('saveTargets');if(st)st.onclick=saveMacroTargets; const dt=document.getElementById('dayType');if(dt)dt.onchange=()=>{const n=nutritionState(state.member),date=md?.value||todayKey();n.days[date]=Object.assign(n.days[date]||{}, {dayType:dt.value,targetSnapshot:n.days[date]?.targetSnapshot||{...n.targets}});saveState();render()}; document.querySelectorAll('[data-macro-date]').forEach(b=>b.onclick=()=>{const md=document.getElementById('macroDate');if(md){md.value=b.dataset.macroDate;render()}}); document.querySelectorAll('[data-adjust]').forEach(b=>b.onclick=()=>applyMacroAdjustment(Number(b.dataset.adjust)));  const sc=document.getElementById('saveCardio');if(sc)sc.onclick=saveCardio; const cc=document.getElementById('clearCardio');if(cc)cc.onclick=clearCardio; const cd=document.getElementById('cardioDate');if(cd)cd.onchange=()=>{const c=cardioState(state.member),x=c.days[cd.value]||Cardio.blankEntry();['cardioActivity','cardioIntensity','cardioDuration','cardioDistance','cardioCalories'].forEach(id=>{const el=document.getElementById(id);if(id==='cardioActivity')el.value=x.activity||'Walking'; if(id==='cardioIntensity')el.value=x.intensity||'Moderate'; if(id==='cardioDuration')el.value=x.duration||''; if(id==='cardioDistance')el.value=x.distance||''; if(id==='cardioCalories')el.value=x.calories||'';});}; 
 }
 
+function openSwapDialog(index){
+  const m=state.member,w=editing.week,day=editing.day,plan=planForSession(m,w),old=plan[day].exercises[index];
+  const dlg=document.getElementById('noteDialog');
+  dlg.innerHTML=`<div class="note-dialog-head"><div><div class="field-label">Exercise ${index+1}</div><h3>Swap ${esc(old[0])}</h3></div><button class="icon-btn" data-swap-close>×</button></div><label class="field-label" for="swapExercise">Replacement</label><select class="select" id="swapExercise">${exerciseOptions(old[0])}</select><div class="field-label" style="margin-top:14px">Apply replacement</div><label class="swap-option"><input type="radio" name="swapScope" value="today" checked> This workout only</label><label class="swap-option"><input type="radio" name="swapScope" value="program"> Rest of program (starting this week)</label><div class="info" style="margin-top:12px">Uses the replacement's recommended rep range and preserves the original exercise's history. A program change affects this member only.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-confirm-swap>Apply swap</button><button class="secondary" data-swap-cancel>Cancel</button></div>`;
+  dlg.querySelector('[data-swap-close]').onclick=()=>dlg.close();dlg.querySelector('[data-swap-cancel]').onclick=()=>dlg.close();
+  dlg.querySelector('[data-confirm-swap]').onclick=()=>{
+    const name=dlg.querySelector('#swapExercise').value,meta=window.BarbarianExercises.metadata(name);
+    if(!meta)return;
+    const replacement=[name,old[1],meta.min,meta.max];
+    const scope=dlg.querySelector('input[name=swapScope]:checked').value;
+    persistAllVisibleExercises();
+    if(scope==='today'){
+      state.sessionSwaps ||= {};state.sessionSwaps[sessionId(m,w,day,index)]=replacement;
+    }else{
+      state.programSnapshots ||= {};
+      const current=programFor(m)[day].exercises;
+      // Freeze earlier weeks so later program edits never rewrite past workouts.
+      for(let prior=1;prior<w;prior++){
+        const k=[m,prior,day].join('|');
+        if(!state.programSnapshots[k])state.programSnapshots[k]=cloneExercises(current);
+      }
+      state.programs[m][day][index]=replacement;
+      // The current session should reflect the permanent selection, not an older one-day swap.
+      if(state.sessionSwaps)delete state.sessionSwaps[sessionId(m,w,day,index)];
+      state.programSnapshots[[m,w,day].join('|')]=cloneExercises(state.programs[m][day]);
+    }
+    saveState();dlg.close();toast(`${name} selected`);render();
+  };
+  dlg.showModal();
+}
 function openNoteDialog(button){
   const scope=button.dataset.noteScope, exercise=button.dataset.noteExercise||'', rawSet=button.dataset.noteSet;
   const setIndex=rawSet===''?null:Number(rawSet), dlg=document.getElementById('noteDialog');
@@ -354,10 +415,10 @@ function syncFollowingWeights(input){
   });
 }
 
-function readCard(card){const name=card.dataset.exercise;const ex=[...daysFor(state.member).flatMap(d=>programFor(state.member)[d].exercises)].find(x=>x[0]===name);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value, reps:r.querySelector('.set-reps').value}));const ww=sets.find(s=>s.weight!=='')?.weight||'';return {workingWeight:Number(ww)||0,sets,saved:true};}
+function readCard(card){const name=card.dataset.exercise;const ex=[...daysFor(state.member).flatMap(d=>planForSession(state.member,state.week)[d].exercises)].find(x=>x[0]===name);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value, reps:r.querySelector('.set-reps').value}));const ww=sets.find(s=>s.weight!=='')?.weight||'';return {workingWeight:Number(ww)||0,sets,saved:true};}
 function persistAllVisibleExercises(){document.querySelectorAll('[data-save-ex]').forEach(b=>{const card=b.closest('.exercise');if(card){const name=card.dataset.exercise;const log=readCard(card);state.logs[key(state.member,state.week,editing.day,name)]=log;}});saveState()}
 function saveExercise(name){const card=document.querySelector(`[data-exercise="${CSS.escape(name)}"]`);if(!card)return;state.logs[key(state.member,state.week,editing.day,name)]=readCard(card);saveState();toast(`${name} saved`);render();}
-function refreshCardMetrics(e){const card=e.target.closest('.exercise');if(!card)return;const ex=programFor(state.member)[editing.day].exercises.find(x=>x[0]===card.dataset.exercise);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value}));const mt=metrics({sets},ex);card.querySelector('.top-val').textContent=mt.top||'—';card.querySelector('.reps-val').textContent=mt.reps||'—';card.querySelector('.volume-val').textContent=mt.volume?Math.round(mt.volume):'—';if(e.target.classList.contains('set-weight')){const quick=card.querySelector('[data-plate-ex]');if(quick){const ww0=sets.find(s=>s.weight!=='')?.weight||0;quick.dataset.plateWeight=ww0;quick.textContent=`🧮 ${ww0?ww0+' lb':'Plates'}`;}const slot=card.querySelector('.warmup-slot');if(slot){const ww=sets.find(s=>s.weight!=='')?.weight||0;const wasOpen=!!slot.querySelector('details')?.open;slot.innerHTML=`<details class="warmup-disclosure" ${wasOpen?'open':''}><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(editing.day,ex,ww)}</details>`;slot.querySelectorAll('[data-warmup-rest]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.warmupLabel,Number(b.dataset.warmupRest)));}}}
+function refreshCardMetrics(e){const card=e.target.closest('.exercise');if(!card)return;const ex=planForSession(state.member,editing.week)[editing.day].exercises.find(x=>x[0]===card.dataset.exercise);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value}));const mt=metrics({sets},ex);card.querySelector('.top-val').textContent=mt.top||'—';card.querySelector('.reps-val').textContent=mt.reps||'—';card.querySelector('.volume-val').textContent=mt.volume?Math.round(mt.volume):'—';if(e.target.classList.contains('set-weight')){const quick=card.querySelector('[data-plate-ex]');if(quick){const ww0=sets.find(s=>s.weight!=='')?.weight||0;quick.dataset.plateWeight=ww0;quick.textContent=`🧮 ${ww0?ww0+' lb':'Plates'}`;}const slot=card.querySelector('.warmup-slot');if(slot){const ww=sets.find(s=>s.weight!=='')?.weight||0;const wasOpen=!!slot.querySelector('details')?.open;slot.innerHTML=`<details class="warmup-disclosure" ${wasOpen?'open':''}><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(editing.day,ex,ww)}</details>`;slot.querySelectorAll('[data-warmup-rest]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.warmupLabel,Number(b.dataset.warmupRest)));}}}
 function startRestTimer(exercise,seconds){ if(window.BarbarianRestTimer) window.BarbarianRestTimer.start(exercise, seconds||window.BarbarianRest.DEFAULT_SECONDS); }
 
 function exerciseOptions(selected){
@@ -376,7 +437,7 @@ function findLastExerciseWeight(member,exercise){
   return best||0;
 }
 function saveProgramChanges(){
-  const m=state.member,day=document.getElementById('editorDay')?.value; if(!day)return;
+  const m=state.member,day=document.getElementById('editorDay')?.value; if(!day)return; snapshotCurrentPrograms(m);
   const rows=[...document.querySelectorAll('.program-slot')];
   state.programs=state.programs||{}; state.programs[m]=state.programs[m]||{};
   state.programs[m][day]=rows.map(row=>{const name=row.querySelector('.editor-exercise').value; const sets=Math.max(1,Number(row.querySelector('.editor-sets').value)||1); const min=Math.max(1,Number(row.querySelector('.editor-min').value)||1); const max=Math.max(min,Number(row.querySelector('.editor-max').value)||min); return [name,sets,min,max];});

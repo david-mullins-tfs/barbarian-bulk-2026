@@ -69,3 +69,5 @@ button,input,select{font:inherit}button{color:inherit}button:focus-visible,input
 .exercise{background:#202A35;border-color:#56616D}
 .exercise.exercise-active{background:#273746}
 .warmup-disclosure{background:#19232E}
+
+.exercise-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.exercise-actions button{flex:1;min-width:125px}.skipped-exercise{opacity:.7;border-style:dashed}.swap-option{display:flex;gap:10px;align-items:center;padding:10px 0;color:var(--text);font-size:14px}.swap-option input{accent-color:#C59A59}
