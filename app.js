@@ -330,6 +330,7 @@ function bind(){
   const m=document.getElementById('memberSelect'); if(m)m.onchange=()=>{state.member=m.value;saveState();editing=null;render()};
   const w=document.getElementById('weekSelect'); if(w)w.onchange=()=>{state.week=Number(w.value);editing=null;render()};
   const ed=document.getElementById('editorDay'); if(ed)ed.onchange=()=>{state.editorDay=ed.value;render()};
+  const ew=document.getElementById('editorWeek'); if(ew)ew.onchange=()=>{state.editorWeek=Number(ew.value);render()};
   const sp=document.querySelector('[data-save-program]'); if(sp)sp.onclick=saveProgramChanges;
   document.querySelectorAll('.editor-move').forEach(btn=>btn.onclick=()=>{
     const row=btn.closest('.program-slot'), list=row?.parentElement; if(!list)return;
@@ -339,7 +340,7 @@ function bind(){
     [...list.querySelectorAll('.program-slot')].forEach((r,n,all)=>{r.querySelector('.field-label').textContent=`Exercise ${n+1}`;r.querySelector('[data-move=up]').disabled=n===0;r.querySelector('[data-move=down]').disabled=n===all.length-1;});
   });
   document.querySelectorAll('.editor-exercise').forEach(sel=>sel.onchange=()=>{const row=sel.closest('.program-slot');const meta=window.BarbarianExercises.metadata(sel.value);if(!row||!meta)return;row.querySelector('.editor-min').value=meta.min;row.querySelector('.editor-max').value=meta.max;const info=row.querySelector('.muted');if(info)info.textContent=`${meta.type} · ${meta.equipment} · ${meta.primary}${meta.secondary.length?' + '+meta.secondary.join(', '):''}`;});
-  document.querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{route=b.dataset.route;editing=null;render()});
+  document.querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{route=b.dataset.route;if(route==='program')state.editorWeek=state.week;editing=null;render()});
   document.querySelectorAll('[data-open-day]').forEach(b=>b.onclick=()=>{const day=b.dataset.openDay,k=[state.member,state.week,day].join('|');state.programSnapshots ||= {};if(!state.programSnapshots[k]){state.programSnapshots[k]=cloneExercises(programFor(state.member)[day].exercises);saveState();}editing={week:state.week,day};render()});
   document.querySelectorAll('[data-save-ex]').forEach(b=>b.onclick=()=>saveExercise(b.dataset.saveEx));
   document.querySelectorAll('[data-exercise-detail]').forEach(b=>b.onclick=()=>openExerciseDetail(b.dataset.exerciseDetail));
@@ -357,6 +358,13 @@ function bind(){
   renderRestTimerControls();
   const back=document.querySelector('[data-back]');if(back)back.onclick=()=>{editing=null;render()};
   const fin=document.querySelector('[data-finish-workout]');if(fin)fin.onclick=()=>{persistAllVisibleExercises();editing=null;toast('Workout saved');render()};
+  document.querySelectorAll('.exercise').forEach(card=>{
+    const repFields=[...card.querySelectorAll('.set-reps')];
+    repFields.forEach((inp,i)=>{
+      inp.setAttribute('enterkeyhint',i===repFields.length-1?'done':'next');
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();advanceRepFocus(inp);}});
+    });
+  });
   document.querySelectorAll('.set-reps,.set-weight').forEach(inp=>{
     const handler=e=>{
       if(e.target.classList.contains('set-weight')) syncFollowingWeights(e.target);
@@ -434,6 +442,13 @@ function syncFollowingWeights(input){
   });
 }
 
+function advanceRepFocus(input){
+  const card=input.closest('.exercise'); if(!card)return;
+  const reps=[...card.querySelectorAll('.set-reps')];const i=reps.indexOf(input);
+  if(i<0)return;
+  if(i+1<reps.length){reps[i+1].focus();reps[i+1].select();}
+  else input.blur();
+}
 function readCard(card){const name=card.dataset.exercise;const ex=[...daysFor(state.member).flatMap(d=>planForSession(state.member,state.week)[d].exercises)].find(x=>x[0]===name);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value, reps:r.querySelector('.set-reps').value}));const ww=sets.find(s=>s.weight!=='')?.weight||'';return {workingWeight:Number(ww)||0,sets,saved:true};}
 function persistAllVisibleExercises(){document.querySelectorAll('[data-save-ex]').forEach(b=>{const card=b.closest('.exercise');if(card){const name=card.dataset.exercise;const log=readCard(card);state.logs[key(state.member,state.week,editing.day,name)]=log;}});saveState()}
 function saveExercise(name){const card=document.querySelector(`[data-exercise="${CSS.escape(name)}"]`);if(!card)return;state.logs[key(state.member,state.week,editing.day,name)]=readCard(card);saveState();toast(`${name} saved`);render();}
@@ -447,22 +462,47 @@ function exerciseOptions(selected){
   return Object.entries(groups).map(([cat,items])=>`<optgroup label="${esc(cat)}">${items.map(item=>`<option value="${esc(item.name)}" ${item.name===selected?'selected':''}>${esc(item.name)} · ${item.min}–${item.max}</option>`).join('')}</optgroup>`).join('');
 }
 function programEditorView(){
-  const m=state.member, plan=programFor(m), day=state.editorDay||daysFor(m)[0], info=plan[day];
-  return `<section class="hero"><h2>Edit Program</h2><p>Each exercise carries its own default rep range, muscle mapping, equipment, and progression style. Exercise history is never deleted when you substitute a movement.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Day</label><select id="editorDay" class="select">${daysFor(m).map(d=>`<option ${d===day?'selected':''}>${d}</option>`).join('')}</select></div></div></section><div class="info">Replacing an exercise changes the current program only. Previous exercise logs remain in your history. A replacement uses its own default rep range and any previous weight history for that exact exercise.</div><div class="program-editor-list">${info.exercises.map((ex,i)=>{const meta=window.BarbarianExercises.metadata(ex[0]);const last=findLastExerciseWeight(m,ex[0]);return `<article class="progress-item program-slot" data-slot="${i}"><div class="editor-slot-head"><div class="field-label">Exercise ${i+1}</div><div class="editor-move-controls"><button type="button" class="secondary editor-move" data-move="up" aria-label="Move exercise up" ${i===0?'disabled':''}>↑</button><button type="button" class="secondary editor-move" data-move="down" aria-label="Move exercise down" ${i===info.exercises.length-1?'disabled':''}>↓</button></div></div><select class="select editor-exercise">${exerciseOptions(ex[0])}</select><div class="editor-grid"><div><label class="field-label">Sets</label><input class="input editor-sets" type="number" min=1 max=10 value="${ex[1]}"></div><div><label class="field-label">Min reps</label><input class="input editor-min" type="number" min=1 max=50 value="${ex[2]}"></div><div><label class="field-label">Max reps</label><input class="input editor-max" type="number" min=1 max=50 value="${ex[3]}"></div></div><div class="muted" style="margin-top:8px">${meta?`${esc(meta.type)} · ${esc(meta.equipment)}${meta.startingResistance!=null?' · Start '+meta.startingResistance+' lb':''} · ${esc(meta.primary)}${meta.secondary.length?' + '+esc(meta.secondary.join(', ')):''}`:'Custom exercise'}${last?` · Last logged ${last} lb`:''}</div></article>`}).join('')}</div><div class="action-row" style="margin-top:14px"><button class="primary" data-save-program>Save Program Changes</button><button class="secondary" data-route="settings">Cancel</button></div><div class="section-title">Exercise Library</div><article class="macro-card">${(window.BarbarianExercises?.all?.()||[]).map(x=>`<div class="history-row"><b>${esc(x.name)}</b><span>${esc(x.category)}</span><span>${x.min}–${x.max}</span><span>${esc(x.equipment)}</span></div>`).join('')}</article>`;
+  const m=state.member, week=Number(state.editorWeek||state.week), day=daysFor(m).includes(state.editorDay)?state.editorDay:daysFor(m)[0], info=planForSession(m,week)[day];
+  return `<section class="hero"><h2>Edit Program</h2><p>Choose the exact member, week, and day. Then choose which workouts should receive your changes.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="editorWeek" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${week===i+1?'selected':''}>Week ${i+1}</option>`).join('')}</select></div><div><label class="field-label">Day</label><select id="editorDay" class="select">${daysFor(m).map(d=>`<option ${d===day?'selected':''}>${d}</option>`).join('')}</select></div></div></section><div class="info">Editing ${esc(m)} · Week ${week} · ${esc(day)}. Existing logged weights, reps and exercise notes are preserved.</div><div class="program-editor-list">${info.exercises.map((ex,i)=>{const meta=window.BarbarianExercises.metadata(ex[0]);const last=findLastExerciseWeight(m,ex[0]);return `<article class="progress-item program-slot" data-slot="${i}"><div class="editor-slot-head"><div class="field-label">Exercise ${i+1}</div><div class="editor-move-controls"><button type="button" class="secondary editor-move" data-move="up" aria-label="Move exercise up" ${i===0?'disabled':''}>↑</button><button type="button" class="secondary editor-move" data-move="down" aria-label="Move exercise down" ${i===info.exercises.length-1?'disabled':''}>↓</button></div></div><select class="select editor-exercise">${exerciseOptions(ex[0])}</select><div class="editor-grid"><div><label class="field-label">Sets</label><input class="input editor-sets" type="number" min=1 max=10 value="${ex[1]}"></div><div><label class="field-label">Min reps</label><input class="input editor-min" type="number" min=1 max=50 value="${ex[2]}"></div><div><label class="field-label">Max reps</label><input class="input editor-max" type="number" min=1 max=50 value="${ex[3]}"></div></div><div class="muted" style="margin-top:8px">${meta?`${esc(meta.type)} · ${esc(meta.equipment)}${meta.startingResistance!=null?' · Start '+meta.startingResistance+' lb':''} · ${esc(meta.primary)}${meta.secondary.length?' + '+esc(meta.secondary.join(', ')):''}`:'Custom exercise'}${last?` · Last logged ${last} lb`:''}</div></article>`}).join('')}</div><article class="progress-item"><label class="field-label" for="editorScope">Apply changes to</label><select class="select" id="editorScope"><option value="current">This workout only (including completed)</option><option value="current-future">This workout and future weeks</option><option value="future">Future workouts only (starting next week)</option></select><p class="muted">Changing exercise order does not delete logged results. Future-only leaves the selected workout unchanged.</p></article><div class="action-row" style="margin-top:14px"><button class="primary" data-save-program>Save Program Changes</button><button class="secondary" data-route="settings">Cancel</button></div><div class="section-title">Exercise Library</div><article class="macro-card">${(window.BarbarianExercises?.all?.()||[]).map(x=>`<div class="history-row"><b>${esc(x.name)}</b><span>${esc(x.category)}</span><span>${x.min}–${x.max}</span><span>${esc(x.equipment)}</span></div>`).join('')}</article>`;
 }
 function findLastExerciseWeight(member,exercise){
   let best=null;
   for(const k of Object.keys(state.logs||{})){ if(!k.startsWith(member+'|')) continue; if(!k.endsWith('|'+exercise)) continue; const l=state.logs[k]; if(l?.workingWeight) best=Number(l.workingWeight); }
   return best||0;
 }
-function saveProgramChanges(){
-  const m=state.member,day=document.getElementById('editorDay')?.value; if(!day)return; snapshotCurrentPrograms(m);
-  const rows=[...document.querySelectorAll('.program-slot')];
-  state.programs=state.programs||{}; state.programs[m]=state.programs[m]||{};
-  state.programs[m][day]=rows.map(row=>{const name=row.querySelector('.editor-exercise').value; const sets=Math.max(1,Number(row.querySelector('.editor-sets').value)||1); const min=Math.max(1,Number(row.querySelector('.editor-min').value)||1); const max=Math.max(min,Number(row.querySelector('.editor-max').value)||min); return [name,sets,min,max];});
-  saveState(); toast(`${m} ${day} program saved`); route='home'; state.editorDay=day; render();
+function remapSessionFlags(member,week,day,before,after){
+  const oldSkip={...(state.skippedExercises||{})},oldSwaps={...(state.sessionSwaps||{})};
+  state.skippedExercises ||= {};state.sessionSwaps ||= {};
+  for(let i=0;i<before.length;i++){
+    delete state.skippedExercises[sessionId(member,week,day,i)];
+    delete state.sessionSwaps[sessionId(member,week,day,i)];
+  }
+  const used=new Set();
+  for(let i=0;i<after.length;i++){
+    const j=before.findIndex((ex,k)=>!used.has(k)&&ex[0]===after[i][0]);
+    if(j<0)continue;used.add(j);
+    const old=sessionId(member,week,day,j),now=sessionId(member,week,day,i);
+    if(oldSkip[old])state.skippedExercises[now]=oldSkip[old];
+    if(oldSwaps[old])state.sessionSwaps[now]=oldSwaps[old];
+  }
 }
-function action(a){const menu=document.getElementById('menuDialog'); if(a.startsWith('route-')){route=a.slice(6);editing=null;if(menu.open)menu.close();render();return} if(a==='close')menu.close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();migrateEquipmentUpgrade();saveState();render();toast('Local data reset')}}}
+function saveProgramChanges(){
+  const m=state.member,day=document.getElementById('editorDay')?.value,week=Number(document.getElementById('editorWeek')?.value||state.week),scope=document.getElementById('editorScope')?.value||'current';
+  if(!day)return;
+  const rows=[...document.querySelectorAll('.program-slot')];
+  const updated=rows.map(row=>{const name=row.querySelector('.editor-exercise').value;const sets=Math.max(1,Number(row.querySelector('.editor-sets').value)||1);const min=Math.max(1,Number(row.querySelector('.editor-min').value)||1);const max=Math.max(min,Number(row.querySelector('.editor-max').value)||min);return [name,sets,min,max]});
+  const first=scope==='future'?week+1:week,last=scope==='current'?week:WEEKS;
+  if(first>WEEKS){toast('There are no later weeks in this 12-week program');return;}
+  state.programSnapshots ||= {};
+  for(let w=first;w<=last;w++){
+    const before=planForSession(m,w)[day].exercises;
+    remapSessionFlags(m,w,day,before,updated);
+    state.programSnapshots[[m,w,day].join('|')]=cloneExercises(updated);
+  }
+  state.editorDay=day;state.editorWeek=week;state.week=week;saveState();
+  toast(`${m} ${day} Week ${first}${last>first?'-'+last:''} saved`);route='home';editing=null;render();
+}
+function action(a){const menu=document.getElementById('menuDialog'); if(a.startsWith('route-')){route=a.slice(6);if(route==='program')state.editorWeek=state.week;editing=null;if(menu.open)menu.close();render();return} if(a==='close')menu.close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();migrateEquipmentUpgrade();saveState();render();toast('Local data reset')}}}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='barbarian-bulk-backup.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
 document.getElementById('importInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.logs||!x.member)throw new Error();state=x;migratePrograms();migrateEquipmentUpgrade();saveState();route='home';editing=null;render();toast('Backup imported')}catch(err){alert('That file is not a valid Barbarian Bulk backup.')}};r.readAsText(f);});
 function renderRestTimerControls(){
