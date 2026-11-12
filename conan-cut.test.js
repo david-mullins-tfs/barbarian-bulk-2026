@@ -22,7 +22,7 @@ const document={getElementById:id=>nodes[id]||(nodes[id]=element()),querySelecto
 const window={addEventListener(){}};
 const context={console,window,document,localStorage,navigator:{},Date,URL,setTimeout(){},requestAnimationFrame(fn){fn()},confirm:()=>true};
 vm.createContext(context);
-for(const file of ['exercise-library.js','atlas-programs.js','volume.js','rest-timer.js','app.js']){
+for(const file of ['nutrition.js','exercise-library.js','atlas-programs.js','volume.js','rest-timer.js','app.js']){
   vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),context,{filename:file});
 }
 const run=src=>vm.runInContext(src,context);
@@ -38,6 +38,9 @@ assert.equal(run('getLog("David",12,"Tuesday","Lateral Raise").workingWeight'),2
 assert.equal(run('getNote("set","David",12,"Tuesday","Lateral Raise",0)'),'Legacy bulk note');
 assert.equal(run('activateProgram("David",CUT_ID,false)'),true);
 assert.equal(run('state.week'),1);
+assert.equal(run('state.nutrition.David.targets.protein'),0);
+assert.equal(run('state.nutrition.David.targets.carbs'),0);
+assert.ok(run('macrosView()').includes('Conan Cut nutrition targets have not been set'));
 assert.equal(run('daysFor("David").includes("Sunday")'),false);
 assert.equal(run('activeProgramFor("Dan")'),'barbarian-bulk');
 assert.equal(run('sessionRows("David",1,"Tuesday","Leg Press").workingWeight'),300);
