@@ -39,6 +39,26 @@
     'Hammer Curl': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:10,max:15,equipment:'Dumbbell'},
     'Cable Bent-over Triceps Extension': {category:'Triceps', primary:'Triceps', secondary:[], type:'isolation', min:10,max:15,equipment:'Cable'},
     'Triceps Pushdown': {category:'Triceps', primary:'Triceps', secondary:[], type:'isolation', min:10,max:12,equipment:'Cable'},
+    // Conan Cut exercise slots: kept separate from similarly named Bulk variations.
+    'Incline Press': {category:'Chest', primary:'Chest', secondary:['Triceps','Front Delts'], type:'compound', min:6,max:10,equipment:'Incline press (implement to confirm)'},
+    'Seated Shoulder Press': {category:'Shoulders', primary:'Front Delts', secondary:['Triceps','Side Delts'], type:'compound', min:8,max:12,equipment:'Seated press (implement to confirm)'},
+    'Barbell Curl': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:8,max:12,equipment:'Barbell', startingResistance:45},
+    'Overhead Cable Triceps Extension': {category:'Triceps', primary:'Triceps', secondary:[], type:'isolation', min:10,max:15,equipment:'Cable'},
+    'Face Pulls': {category:'Shoulders', primary:'Rear Delts', secondary:['Back'], type:'isolation', min:12,max:15,equipment:'Cable'},
+    'Leg Extensions': {category:'Legs', primary:'Quads', secondary:[], type:'isolation', min:10,max:15,equipment:'Machine'},
+    'Seated Leg Curl': {category:'Legs', primary:'Hamstrings', secondary:[], type:'isolation', min:10,max:15,equipment:'Seated Machine'},
+    'Walking Lunges': {category:'Legs', primary:'Quads', secondary:['Glutes','Hamstrings'], type:'compound', min:8,max:10,equipment:'Dumbbell/Barbell'},
+    'Hanging Knee Raises': {category:'Core', primary:'Abs', secondary:['Hip Flexors'], type:'isolation', min:10,max:15,equipment:'Pullup Bar'},
+    'Machine Crunches': {category:'Core', primary:'Abs', secondary:[], type:'isolation', min:12,max:15,equipment:'Ab Machine'},
+    'Standing Calf Raise Smith Machine': {category:'Legs', primary:'Calves', secondary:[], type:'isolation', min:10,max:15,equipment:'Smith Machine'},
+    'Preacher Curl Machine': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:8,max:12,equipment:'Machine'},
+    'Dip Machine': {category:'Triceps', primary:'Triceps', secondary:['Chest','Front Delts'], type:'compound', min:8,max:12,equipment:'Dip Machine'},
+    'Hammer Curls Dumbbell': {category:'Biceps', primary:'Biceps', secondary:[], type:'isolation', min:10,max:12,equipment:'Dumbbell'},
+    'Rear Delt Fly on Bench': {category:'Shoulders', primary:'Rear Delts', secondary:[], type:'isolation', min:12,max:15,equipment:'Dumbbell + Incline Bench'},
+    'Romanian Deadlift': {category:'Posterior Chain', primary:'Hamstrings', secondary:['Glutes','Back'], type:'compound', min:6,max:10,equipment:'Barbell/Dumbbell'},
+    'Leg Press (Feet Higher)': {category:'Legs', primary:'Glutes', secondary:['Hamstrings','Quads'], type:'compound', min:8,max:12,equipment:'Leg Press Machine'},
+    'Leg Extensions (Lighter)': {category:'Legs', primary:'Quads', secondary:[], type:'isolation', min:12,max:15,equipment:'Machine'},
+    'Standing Calf Press Smith Machine': {category:'Legs', primary:'Calves', secondary:[], type:'isolation', min:12,max:15,equipment:'Smith Machine'},
   };
   const categories=[...new Set(Object.values(LIBRARY).map(x=>x.category))];
   function metadata(name){ return LIBRARY[name] || null; }

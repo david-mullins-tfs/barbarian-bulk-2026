@@ -1,8 +1,8 @@
-const CACHE = 'heldkraft-atlas-v33-smart-reps-editor';
+const CACHE = 'heldkraft-atlas-v34-conan-library';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
-  './volume.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
-  './icons/icon-192.png', './icons/icon-512.png',
+  './volume.js', './atlas-programs.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
+  './icons/icon-192.png', './icons/icon-512.png', './exercise-art/atlas-movement-placeholder.svg',
   './exercise-art/barbell-back-squat-finish-v31.webp',
   './exercise-art/pec-deck-start-v32.webp', './exercise-art/pec-deck-finish-v32.webp', './exercise-art/barbell-bench-press-start-v32.webp', './exercise-art/barbell-bench-press-finish-v32.webp', './exercise-art/barbell-back-squat-start-v32.webp', './exercise-art/barbell-back-squat-finish-v32.webp',
   './exercise-art/pec-deck-pilot.webp', './exercise-art/barbell-bench-press-pilot.webp', './exercise-art/barbell-back-squat-pilot.webp',
