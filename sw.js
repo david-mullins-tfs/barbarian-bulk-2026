@@ -1,4 +1,4 @@
-const CACHE = 'heldkraft-atlas-v34-conan-library';
+const CACHE = 'heldkraft-atlas-v34-1-conan-visibility';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
   './volume.js', './atlas-programs.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
