@@ -146,3 +146,27 @@ body{background:#151B23;color:#E8DCC7}
 /* v32: genuine engraved start/finish illustrations, no stick-figure schematics */
 .atlas-position-art{height:clamp(140px,33vw,230px);aspect-ratio:auto;object-fit:contain;background:#101820;padding:3px}
 @media(max-width:420px){.atlas-pilot-positions>div{padding:8px}.atlas-position-art{height:170px}}
+
+
+/* ATLAS v35 — per-muscle recovery check-in and adjusted volume */
+.recovery-panel{border:1px solid rgba(197,154,89,.58);background:linear-gradient(155deg,#1C2935,#18222D)}
+.recovery-panel .exercise-name{color:#E8DCC7}
+.recovery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:13px 0}
+.recovery-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.recovery-field .select{width:100%;max-width:100%;font-size:14px}
+.recovery-warning{margin:12px 0;font-size:12px}
+.recovery-note{border:1px solid #43515e;background:#151e28;padding:10px;border-radius:10px;line-height:1.35}
+.recovery-note strong{display:block;font-size:13px;color:#D9B177}
+.recovery-note .muted{margin-top:6px;font-size:12px}
+.recovery-set-list{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.recovery-set-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 10px;border:1px solid #3d4a58;border-radius:10px;background:#151e28}
+.recovery-set-row strong{font-size:13px}
+.recovery-set-row .muted{font-size:11px;margin-top:4px}
+.recovery-set-row label{display:flex;flex-direction:column;gap:4px;min-width:72px}
+.recovery-set-input{width:72px;max-width:72px;text-align:center}
+.recovery-volume-row{display:grid;grid-template-columns:minmax(94px,2fr) repeat(3,minmax(36px,1fr)) minmax(42px,.85fr);gap:5px;align-items:center;padding:11px 8px;font-size:12px}
+.recovery-volume-row .volume-number{text-align:center;white-space:nowrap}
+.recovery-volume-row .volume-status{font-size:10px;text-align:center;overflow:hidden}
+.recovery-volume-head{font-size:10px;font-weight:700;letter-spacing:.02em;color:#D4AD70}
+.recovery-volume-head>div:not(:first-child){text-align:center}
+@media(max-width:540px){.recovery-grid{grid-template-columns:1fr}.recovery-volume-row{grid-template-columns:minmax(85px,2fr) repeat(3,minmax(33px,1fr)) minmax(38px,.8fr);font-size:11px;padding:9px 5px}}

@@ -1,7 +1,7 @@
-const CACHE = 'heldkraft-atlas-v34-1-conan-visibility';
+const CACHE = 'heldkraft-atlas-v35-recovery-checkin';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
-  './volume.js', './atlas-programs.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
+  './volume.js', './atlas-programs.js', './atlas-recovery.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png', './exercise-art/atlas-movement-placeholder.svg',
   './exercise-art/barbell-back-squat-finish-v31.webp',
   './exercise-art/pec-deck-start-v32.webp', './exercise-art/pec-deck-finish-v32.webp', './exercise-art/barbell-bench-press-start-v32.webp', './exercise-art/barbell-bench-press-finish-v32.webp', './exercise-art/barbell-back-squat-start-v32.webp', './exercise-art/barbell-back-squat-finish-v32.webp',
@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match('./index.html')))
+        .catch(() => caches.match(request).then(cached => cached || caches.match(url.origin + url.pathname)).then(cached => cached || (navigation ? caches.match('./index.html') : Response.error())))
     );
     return;
   }

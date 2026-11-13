@@ -34,6 +34,7 @@ function migrateProgramLibrary(){
   state.programStarts ||= {};
   state.programArchives ||= {};
   state.programVariants ||= {};
+  state.recoverySessions ||= {};
   for(const member of MEMBERS){
     state.programWeeks[member] ||= {};
     if(!state.programWeeks[member][BULK_ID])state.programWeeks[member][BULK_ID]=Number(state.week)||1;
@@ -107,6 +108,80 @@ function migrateEquipmentUpgrade(){
   state.notes=migratedNotes;
   state.equipmentUpgradeV23=true;
 }
+function recoveryKey(member,week,day){
+  return ['recovery',activeProgramFor(member),member,week,day].join('|');
+}
+
+function recoveryEntry(member,week,day){
+  return state.recoverySessions?.[recoveryKey(member,week,day)]||null;
+}
+
+function recoveryStarted(member,week,day){
+  const info=planForSession(member,week)[day];
+  return !!info&&info.exercises.some(ex=>getLog(member,week,day,ex[0])?.sets?.some(s=>s.reps!==''&&s.reps!=null&&Number(s.reps)>0));
+}
+
+function recoveryGroups(member,week,day){
+  return window.AtlasRecovery.groupList(planForSession(member,week)[day]?.exercises||[],name=>window.BarbarianExercises.metadata(name));
+}
+
+function recoveryWeeklyExtras(member,week,muscle){
+  let extras=0;
+  for(const [day,info] of Object.entries(planForSession(member,week))){
+    const entry=recoveryEntry(member,week,day);
+    if(!entry?.applied)continue;
+    info.exercises.forEach((ex,i)=>{
+      const meta=window.BarbarianExercises.metadata(ex[0]);
+      if(window.AtlasRecovery.muscleGroup(meta?.primary)!==muscle)return;
+      const count=Number(entry.adjustments?.[i+'|'+ex[0]]);
+      if(Number.isInteger(count)&&count>ex[1])extras+=count-ex[1];
+    });
+  }
+  return extras;
+}
+
+function recoveryPerformanceGood(member,week,day,name,muscle){
+  const required=activeProgramFor(member)===CUT_ID?2:1;
+  let good=0;
+  for(let w=week-1;w>=1;w--){
+    const prior=planForSession(member,w)[day]?.exercises.find(x=>x[0]===name);
+    if(!prior)continue;
+    const log=getLog(member,w,day,name);
+    if(!log?.sets||log.sets.length<prior[1]||!log.sets.slice(0,prior[1]).every(s=>Number(s.reps)>=prior[2]))return false;
+    if(['very','some'].includes(recoveryEntry(member,w,day)?.responses?.[muscle]))return false;
+    if(++good>=required)return true;
+  }
+  return false;
+}
+
+function recoverySuggested(member,week,day,responses){
+  const exercises=planForSession(member,week)[day].exercises;
+  return window.AtlasRecovery.proposal(
+    exercises,responses,name=>window.BarbarianExercises.metadata(name),
+    (name,muscle)=>recoveryPerformanceGood(member,week,day,name,muscle),
+    muscle=>recoveryWeeklyExtras(member,week,muscle)<1
+  );
+}
+
+function effectivePlanForSession(member,week){
+  const plan=planForSession(member,week);
+  for(const [day,info] of Object.entries(plan)){
+    const record=recoveryEntry(member,week,day);
+    if(!record?.applied||!record.adjustments)continue;
+    info.exercises=info.exercises.map((ex,i)=>{
+      const v=Number(record.adjustments[i+'|'+ex[0]]);
+      return Number.isInteger(v)&&v>=1&&ex[1]>0?[ex[0],v,ex[2],ex[3]]:ex;
+    });
+  }
+  return plan;
+}
+
+function recoveryWasReduced(member,week,day,name){
+  const original=planForSession(member,week)[day]?.exercises.find(x=>x[0]===name);
+  const actual=effectivePlanForSession(member,week)[day]?.exercises.find(x=>x[0]===name);
+  return !!original&&!!actual&&actual[1]<original[1];
+}
+
 function sessionId(member,week,day,index){return programScopeKey(member,week,day,index);}
 function planForSession(member,week){
   const plan=programFor(member);
@@ -173,17 +248,20 @@ function noteButton(scope,label,member,week,day,exercise,setIndex,compact=false)
 function getLog(member,week,day,exercise){return state.logs[key(member,week,day,exercise)] || null}
 function targetText(ex){return ex[3]==null?'Each':`${ex[2]}–${ex[3]}`}
 function sessionRows(member,week,day,exercise){
-  const plan=planForSession(member,week);
+  const plan=effectivePlanForSession(member,week);
   const ex=plan[day]?.exercises.find(x=>x[0]===exercise); if(!ex) return null;
   const existing=getLog(member,week,day,exercise);
   if(existing){
-    const normalized={...existing,sets:window.BarbarianWeightSync?window.BarbarianWeightSync.normalizeSetWeights(existing.sets||[]):(existing.sets||[])};
+    const normalized={...existing,sets:window.BarbarianWeightSync?window.BarbarianWeightSync.normalizeSetWeights(existing.sets||[]):[...(existing.sets||[])]};
+    while(normalized.sets.length<ex[1])normalized.sets.push({weight:Number(existing.workingWeight)||0,reps:''});
     return normalized;
   }
   let weight=0;
   const prev=week>1?getLog(member,week-1,day,exercise):null;
   if(prev){
-    const complete=ex[2]!=null && prev.sets.length===ex[1] && prev.sets.every(s=>Number(s.reps)>=ex[3]);
+    const prior=planForSession(member,week-1)[day]?.exercises.find(x=>x[0]===exercise);
+    const complete=!!prior&&prior[3]!=null&&prev.sets.length>=prior[1]&&!recoveryWasReduced(member,week-1,day,exercise)
+      &&prev.sets.slice(0,prior[1]).every(s=>s.reps!==''&&Number(s.reps)>=prior[3]);
     weight=exercise==='Assisted Chin-Ups' ? Math.max(0,(Number(prev.workingWeight)||0)-(complete?INCREMENT:0)) : (Number(prev.workingWeight)||0)+(complete?INCREMENT:0);
   }
   if(prev && !weight) weight=Number(prev.workingWeight)||0;
@@ -215,7 +293,7 @@ function metrics(log,ex){
   return {top:Math.max(0,...weights),reps:repsTotal,volume,ready};
 }
 function dayComplete(member,week,day){
-  return planForSession(member,week)[day].exercises.every((ex,i)=>{if(isSkipped(member,week,day,i))return true;const l=getLog(member,week,day,ex[0]); return ex[1]===0 ? true : !!l && l.sets.length===ex[1] && l.sets.every(s=>s.reps!=='');});
+  return effectivePlanForSession(member,week)[day].exercises.every((ex,i)=>{if(isSkipped(member,week,day,i))return true;const l=getLog(member,week,day,ex[0]); return ex[1]===0 ? true : !!l && l.sets.length>=ex[1] && l.sets.slice(0,ex[1]).every(s=>s.reps!==''&&s.reps!=null);});
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
@@ -233,13 +311,100 @@ function homeView(){
   <div class="action-row" style="margin:14px 0"><button class="secondary" data-route="library">⚔️ Program Library</button></div><div class="section-title">Training days</div><div class="day-grid">${days.map(day=>dayCard(m,w,day)).join('')}</div>
   <div class="section-title">Program notes</div><div class="info">Choose a starting weight. Keep that weight until all target sets reach the top of the range. Then add 5 lb next session and start the rep target back at the bottom.</div>`;
 }
-function dayCard(m,w,day){const plan=planForSession(m,w),done=dayComplete(m,w,day), n=plan[day].exercises.length;return `<button class="day-card" data-open-day="${day}" style="text-align:left"><div class="day-top"><div><div class="day-name">${day}</div><div class="focus">${plan[day].focus} · ${n} exercises</div></div><div class="done-dot ${done?'done':''}"></div></div><div class="action-row" style="margin-top:12px"><span class="secondary" style="display:flex;align-items:center;justify-content:center">${done?'Review':'Start workout'}</span></div></button>`}
+function dayCard(m,w,day){
+  const plan=effectivePlanForSession(m,w),done=dayComplete(m,w,day);
+  const n=plan[day].exercises.length,recovery=recoveryEntry(m,w,day);
+  const baseSets=planForSession(m,w)[day].exercises.reduce((sum,ex)=>sum+ex[1],0);
+  const nowSets=plan[day].exercises.reduce((sum,ex)=>sum+ex[1],0);
+  const feedback=!recovery?.applied&&!recoveryStarted(m,w,day)?'Recovery check-in →':nowSets!==baseSets?`${baseSets} → ${nowSets} working sets`:'Volume as programmed';
+  return `<button class="day-card" data-open-day="${day}" style="text-align:left"><div class="day-top"><div><div class="day-name">${day}</div><div class="focus">${plan[day].focus} · ${n} exercises</div><div class="muted" style="margin-top:6px">${esc(feedback)}</div></div><div class="done-dot ${done?'done':''}"></div></div><div class="action-row" style="margin-top:12px"><span class="secondary" style="display:flex;align-items:center;justify-content:center">${done?'Review':'Start workout'}</span></div></button>`;
+}
+
+function recoveryPanel(member,week,day){
+  const original=planForSession(member,week)[day]?.exercises||[];
+  const groups=recoveryGroups(member,week,day),record=recoveryEntry(member,week,day);
+  if(!groups.length)return {blocked:false,html:''};
+  const originalSets=original.reduce((sum,ex)=>sum+ex[1],0);
+  if(record?.applied){
+    const adapted=effectivePlanForSession(member,week)[day].exercises;
+    const adjustedSets=adapted.reduce((sum,ex)=>sum+ex[1],0);
+    const summary=Object.entries(record.responses||{}).map(([group,rating])=>`${esc(group)}: ${esc(window.AtlasRecovery.RATINGS[rating]||'Not rated')}`).join(' · ');
+    const edit=!recoveryStarted(member,week,day)?'<button class="secondary" data-recovery-edit>Edit check-in</button>':'';
+    return {blocked:false,html:`<article class="progress-item recovery-panel"><div class="field-label">RECOVERY CHECK-IN · SAVED</div><div class="exercise-name">${record.skipped?'Standard volume selected':`Today: ${adjustedSets} of ${originalSets} working sets`}</div><p class="muted">${summary||'No ratings recorded · standard program sets.'}</p><div class="action-row" style="margin-top:10px">${edit}</div></article>`};
+  }
+  if(recoveryStarted(member,week,day)){
+    return {blocked:false,html:'<div class="info">This workout already has logged sets. Its original prescription remains unchanged; recovery adjustments are available before starting new workouts.</div>'};
+  }
+  if(!record?.reviewed){
+    return {blocked:true,html:`<article class="progress-item recovery-panel"><div class="field-label">ATLAS · PRE-WORKOUT RECOVERY</div><div class="exercise-name">How recovered are today's muscle groups?</div><p class="muted">Answer before your first working set. This check-in adjusts this session only; it never changes your 12-week program or existing records.</p><div class="recovery-grid">${groups.map(group=>`<label class="recovery-field"><span class="field-label">${esc(group)}</span><select class="select" data-recovery-group="${esc(group)}"><option value="">Select recovery</option>${Object.entries(window.AtlasRecovery.RATINGS).map(([value,label])=>`<option value="${value}" ${record?.responses?.[group]===value?'selected':''}>${esc(label)}</option>`).join('')}</select></label>`).join('')}</div><div class="info recovery-warning">Soreness is not the same as injury. With sharp pain, swelling, unusual weakness or suspected injury, postpone the movement and get appropriate evaluation; don't train through it using this adjustment.</div><div class="action-row"><button class="primary" data-recovery-preview>Review suggested sets</button><button class="secondary" data-recovery-standard>Use original sets instead</button></div></article>`};
+  }
+  const suggestion=recoverySuggested(member,week,day,record.responses);
+  const newSets=suggestion.counts.reduce((sum,n)=>sum+n,0);
+  const detail=groups.map(group=>`<div class="recovery-note"><strong>${esc(group)} · ${esc(window.AtlasRecovery.RATINGS[record.responses[group]])}</strong><div class="muted">${esc(suggestion.messages[group]||'Standard working sets retained.')}</div></div>`).join('');
+  const rows=original.map((ex,i)=>{
+    const base=ex[1],proposed=suggestion.counts[i];
+    return `<div class="recovery-set-row"><div><strong>${esc(ex[0])}</strong><div class="muted">${base} original working sets</div></div><label><span class="field-label">Today</span><input class="mini-input recovery-set-input" data-recovery-set="${i}" aria-label="Working sets for ${esc(ex[0])}" type="number" min="${base>0?1:0}" max="${base+1}" step="1" value="${proposed}" ${base<=0?'disabled':''}></label></div>`;
+  }).join('');
+  return {blocked:true,html:`<article class="progress-item recovery-panel"><div class="field-label">REVIEW BEFORE TRAINING</div><div class="exercise-name">Proposed: ${newSets} of ${originalSets} working sets</div><p class="muted">You can override any set count below before applying. Extra sets are capped to one per muscle group per week. No compound sets are reduced automatically.</p><div class="recovery-grid">${detail}</div><div class="recovery-set-list">${rows}</div><div class="action-row" style="margin-top:14px"><button class="primary" data-recovery-apply>Apply these sets</button><button class="secondary" data-recovery-standard>Keep original sets</button><button class="secondary" data-recovery-edit>Change answers</button></div></article>`};
+}
+
+function reviewRecovery(){
+  if(!editing)return;
+  const m=state.member,w=editing.week,day=editing.day;
+  const answers={};
+  const groups=recoveryGroups(m,w,day);
+  document.querySelectorAll('[data-recovery-group]').forEach(el=>{if(el.value)answers[el.dataset.recoveryGroup]=el.value;});
+  if(groups.some(group=>!window.AtlasRecovery.RATINGS[answers[group]])){toast('Choose a recovery rating for each muscle group');return;}
+  state.recoverySessions ||= {};
+  state.recoverySessions[recoveryKey(m,w,day)]={responses:answers,reviewed:true,applied:false,recordedAt:new Date().toISOString()};
+  saveState();render();
+}
+
+function applyRecovery(standard=false){
+  if(!editing)return;
+  const m=state.member,w=editing.week,day=editing.day;
+  if(recoveryStarted(m,w,day)){toast('Existing logged sets are protected. Recovery changes must be made before training.');return;}
+  const exs=planForSession(m,w)[day].exercises;
+  const prior=recoveryEntry(m,w,day)||{responses:{}};
+  const adjustments={},extras={};
+  let capped=false;
+  for(let i=0;i<exs.length;i++){
+    const ex=exs[i],base=ex[1];
+    if(!base)continue;
+    const field=document.querySelector(`[data-recovery-set="${i}"]`);
+    const raw=standard?base:Number(field?.value);
+    let target=Number.isInteger(raw)?Math.max(1,Math.min(base+1,raw)):base;
+    if(target>base){
+      const meta=window.BarbarianExercises.metadata(ex[0]);
+      const muscle=window.AtlasRecovery.muscleGroup(meta?.primary)||ex[0];
+      const priorExtras=recoveryWeeklyExtras(m,w,muscle),localExtras=extras[muscle]||0;
+      if(priorExtras+localExtras>=1){target=base;capped=true;}
+      else extras[muscle]=localExtras+1;
+    }
+    adjustments[i+'|'+ex[0]]=target;
+  }
+  state.recoverySessions ||= {};
+  state.recoverySessions[recoveryKey(m,w,day)]={responses:prior.responses||{},adjustments,reviewed:true,applied:true,skipped:standard&&!Object.keys(prior.responses||{}).length,recordedAt:prior.recordedAt||new Date().toISOString(),appliedAt:new Date().toISOString()};
+  saveState();render();
+  toast(capped?'Weekly extra-set cap applied; recovery saved':'Recovery volume saved for this workout');
+}
+
+function editRecovery(){
+  if(!editing)return;
+  const m=state.member,w=editing.week,day=editing.day;
+  if(recoveryStarted(m,w,day)){toast('Recovery is locked after sets are logged');return;}
+  const key=recoveryKey(m,w,day),entry=recoveryEntry(m,w,day);
+  if(!entry)return;
+  state.recoverySessions[key]={responses:entry.responses||{},applied:false,reviewed:false,recordedAt:entry.recordedAt};
+  saveState();render();
+}
 
 function workoutView(week,day){
-  const m=state.member, info=planForSession(m,week)[day];
+  const m=state.member,info=effectivePlanForSession(m,week)[day],recovery=recoveryPanel(m,week,day);
   return `<div class="workout-head"><div><button class="back" data-back>← Back</button><h2 style="margin-top:14px">${day} · Week ${week}</h2><p>${esc(info.focus)}</p></div>${noteButton('workout',day+' workout',m,week,day)}</div>
-    ${info.exercises.map((ex,i)=>isSkipped(m,week,day,i)?`<article class="exercise skipped-exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Skipped for this workout</div></div><button class="secondary" data-unskip="${i}">Restore</button></div></article>`:exerciseCard(m,week,day,ex,i)).join('')}
-    <div class="action-row" style="margin:18px 0 6px"><button class="primary" data-finish-workout>Save ${day}</button></div>`;
+    ${recovery.html}
+    ${recovery.blocked?'':info.exercises.map((ex,i)=>isSkipped(m,week,day,i)?`<article class="exercise skipped-exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Skipped for this workout</div></div><button class="secondary" data-unskip="${i}">Restore</button></div></article>`:exerciseCard(m,week,day,ex,i)).join('')}
+    ${recovery.blocked?'':`<div class="action-row" style="margin:18px 0 6px"><button class="primary" data-finish-workout>Save ${day}</button></div>`}`;
 }
 
 function warmupView(day,ex,workingWeight){
@@ -274,7 +439,7 @@ function openExerciseDetail(name){
 }
 function exerciseCard(m,w,day,ex,index=0){
   if(ex[1]===0) return `<article class="exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">Each</div></div></div><p class="muted" style="margin:12px 0 0">Accessory/superset note from the original program.</p></article>`;
-  const log=sessionRows(m,w,day,ex[0]); const mt=metrics(log,ex); const suggested=log.workingWeight||0; const isSaved=getLog(m,w,day,ex[0]);
+  const log=sessionRows(m,w,day,ex[0]); const mt=metrics(log,ex);if(recoveryWasReduced(m,w,day,ex[0]))mt.ready=false; const suggested=log.workingWeight||0; const isSaved=getLog(m,w,day,ex[0]);
   const loggedCount=log.sets.filter(s=>s.reps!=='' && s.reps!=null && Number(s.reps)>0).length;
   const status=loggedCount>=ex[1]?'complete':loggedCount>0?'active':'ready';
   const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
@@ -295,7 +460,25 @@ return `<section class="hero"><h2>${esc(m)} · Progress</h2><p>Track working wei
 function progressItem(m,ex){const values=[];for(let w=1;w<=WEEKS;w++){let found=null;for(const d of daysFor(m)){const l=getLog(m,w,d,ex[0]);if(l){const mt=metrics(l,ex);found=mt.top||l.workingWeight||0;break}}values.push(found||0)}const best=Math.max(0,...values);return `<article class="progress-item"><div class="top"><div class="exercise-name">${esc(ex[0])}</div><div class="muted">Best ${best||'—'} lb</div></div><div class="mini-grid">${values.map((v,i)=>`<div class="week-chip ${i+1===state.week?'active':''}"><div class="w">W${i+1}</div><div class="v">${v||'—'}</div></div>`).join('')}</div></article>`}
 
 
-function volumeView(){const m=state.member,w=state.week,plan=planForSession(m,w);for(const day of Object.keys(plan))plan[day].exercises=plan[day].exercises.filter((_,i)=>!isSkipped(m,w,day,i));const planned=Volume.programmedVolume(plan,MUSCLE_MAP),done=Volume.completedVolume(volumeLogProjection(m,w,plan),plan,MUSCLE_MAP,m,w);const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];const shoulderProgram=shoulderParts.reduce((n,x)=>n+(planned[x]||0),0);const shoulderDone=shoulderParts.reduce((n,x)=>n+(done[x]||0),0);const muscles=Object.keys(planned).sort((a,b)=>planned[b]-planned[a]);return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Weighted sets: prime mover 1.0 · secondary muscle 0.5 · isolation target 1.0.</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section><div class="info">MV &lt;6 · MEV 6–&lt;10 · MAV 10–20 · MRV &gt;20 weighted sets/week. These are guideposts, not individual recovery limits.</div><div class="section-title">Programmed vs completed</div><div class="volume-card volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderProgram.toFixed(1)}</div><div class="volume-number">${shoulderDone.toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderProgram)}">${Volume.classifyVolume(shoulderProgram)}</div></div><div class="info">Shoulder total combines general delts plus front, side, and rear-delt weighted credits. Individual rows remain below for detail.</div><div class="volume-card volume-row volume-head"><div>Muscle</div><div>Program</div><div>Done</div><div>Zone</div></div>${muscles.map(x=>`<div class="volume-card volume-row"><b>${x}</b><div class="volume-number">${planned[x].toFixed(1)}</div><div class="volume-number">${(done[x]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(planned[x])}">${Volume.classifyVolume(planned[x])}</div></div>`).join('')}`;}
+function volumeView(){
+  const m=state.member,w=state.week,base=planForSession(m,w),adjusted=effectivePlanForSession(m,w);
+  for(const day of Object.keys(adjusted))adjusted[day].exercises=adjusted[day].exercises.filter((_,i)=>!isSkipped(m,w,day,i));
+  const planned=Volume.programmedVolume(base,MUSCLE_MAP),suggested=Volume.programmedVolume(adjusted,MUSCLE_MAP);
+  const completed=Volume.completedVolume(volumeLogProjection(m,w,adjusted),adjusted,MUSCLE_MAP,m,w);
+  const shoulderParts=['Delts','Front Delts','Side Delts','Rear Delts'];
+  const shoulderTotal=rows=>shoulderParts.reduce((n,x)=>n+(rows[x]||0),0);
+  const muscles=[...new Set([...Object.keys(planned),...Object.keys(suggested),...Object.keys(completed)])].sort((a,b)=>Math.max(suggested[b]||0,planned[b]||0)-Math.max(suggested[a]||0,planned[a]||0));
+  const records=Object.keys(base).map(day=>({day,entry:recoveryEntry(m,w,day)})).filter(x=>x.entry?.applied);
+  const rows=muscles.map(name=>`<div class="volume-card recovery-volume-row"><b>${esc(name)}</b><div class="volume-number">${(planned[name]||0).toFixed(1)}</div><div class="volume-number">${(suggested[name]||0).toFixed(1)}</div><div class="volume-number">${(completed[name]||0).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(suggested[name]||0)}">${Volume.classifyVolume(suggested[name]||0)}</div></div>`).join('');
+  return `<section class="hero"><h2>${esc(m)} · Weekly Volume</h2><p>Programmed, recovery-adjusted and completed weighted sets (primary 1.0 · secondary 0.5).</p><div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div></section>
+  <div class="info">The 12-week template remains unchanged. Adjusted sets reflect this member's recovery feedback and skipped exercises for Week ${w}. MV/MEV/MAV/MRV are general reference zones, not personal recovery thresholds.</div>
+  <div class="section-title">Planned vs adjusted vs completed</div>
+  <div class="volume-card recovery-volume-row"><b>Shoulders — Total</b><div class="volume-number">${shoulderTotal(planned).toFixed(1)}</div><div class="volume-number">${shoulderTotal(suggested).toFixed(1)}</div><div class="volume-number">${shoulderTotal(completed).toFixed(1)}</div><div class="volume-status ${Volume.classifyVolume(shoulderTotal(suggested))}">${Volume.classifyVolume(shoulderTotal(suggested))}</div></div>
+  <div class="info">Shoulder total combines general, front, side and rear delts. Individual rows follow.</div>
+  <div class="volume-card recovery-volume-row recovery-volume-head"><div>Muscle</div><div>Plan</div><div>Adjust</div><div>Done</div><div>Zone</div></div>${rows}
+  <div class="section-title">Recovery feedback · Week ${w}</div>
+  ${records.length?`<div class="progress-list">${records.map(({day,entry})=>`<article class="progress-item"><b>${esc(day)}</b><div class="muted">${Object.entries(entry.responses||{}).map(([group,rating])=>`${esc(group)}: ${esc(window.AtlasRecovery.RATINGS[rating]||rating)}`).join(' · ')||'Standard sets · No rating recorded'}</div></article>`).join('')}</div>`:'<div class="info">No recovery check-ins recorded for this member and week yet.</div>'}`;
+}
 
 function macrosView(){
   const m=state.member,n=nutritionState(m),date=document.getElementById('macroDate')?.value||todayKey(),d=n.days[date]||{protein:'',fat:'',carbs:'',weight:'',dayType:'training'},base=n.targets, snapshot=d.targetSnapshot||base;
@@ -415,6 +598,11 @@ function bind(){
   const ed=document.getElementById('editorDay'); if(ed)ed.onchange=()=>{state.editorDay=ed.value;render()};
   const ew=document.getElementById('editorWeek'); if(ew)ew.onchange=()=>{state.editorWeek=Number(ew.value);render()};
   const sp=document.querySelector('[data-save-program]'); if(sp)sp.onclick=saveProgramChanges;
+  const rp=document.querySelector('[data-recovery-preview]');if(rp)rp.onclick=reviewRecovery;
+  const ra=document.querySelector('[data-recovery-apply]');if(ra)ra.onclick=()=>applyRecovery(false);
+  const rs=document.querySelector('[data-recovery-standard]');if(rs)rs.onclick=()=>applyRecovery(true);
+  const re=document.querySelector('[data-recovery-edit]');if(re)re.onclick=editRecovery;
+
   document.querySelectorAll('[data-activate-program]').forEach(b=>b.onclick=()=>{if(activateProgram(state.member,b.dataset.activateProgram)){route='home';render();toast('Program switched — training history preserved');}});
   document.querySelectorAll('.editor-move').forEach(btn=>btn.onclick=()=>{
     const row=btn.closest('.program-slot'), list=row?.parentElement; if(!list)return;
@@ -538,7 +726,7 @@ function advanceRepFocus(input){
 function readCard(card){const name=card.dataset.exercise;const ex=[...daysFor(state.member).flatMap(d=>planForSession(state.member,state.week)[d].exercises)].find(x=>x[0]===name);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value, reps:r.querySelector('.set-reps').value}));const ww=sets.find(s=>s.weight!=='')?.weight||'';return {workingWeight:Number(ww)||0,sets,saved:true};}
 function persistAllVisibleExercises(){document.querySelectorAll('[data-save-ex]').forEach(b=>{const card=b.closest('.exercise');if(card){const name=card.dataset.exercise;const log=readCard(card);state.logs[key(state.member,state.week,editing.day,name)]=log;}});saveState()}
 function saveExercise(name){const card=document.querySelector(`[data-exercise="${CSS.escape(name)}"]`);if(!card)return;state.logs[key(state.member,state.week,editing.day,name)]=readCard(card);saveState();toast(`${name} saved`);render();}
-function refreshCardMetrics(e){const card=e.target.closest('.exercise');if(!card)return;const ex=planForSession(state.member,editing.week)[editing.day].exercises.find(x=>x[0]===card.dataset.exercise);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value}));const mt=metrics({sets},ex);card.querySelector('.top-val').textContent=mt.top||'—';card.querySelector('.reps-val').textContent=mt.reps||'—';card.querySelector('.volume-val').textContent=mt.volume?Math.round(mt.volume):'—';if(e.target.classList.contains('set-weight')){const quick=card.querySelector('[data-plate-ex]');if(quick){const ww0=sets.find(s=>s.weight!=='')?.weight||0;quick.dataset.plateWeight=ww0;quick.textContent=`🧮 ${ww0?ww0+' lb':'Plates'}`;}const slot=card.querySelector('.warmup-slot');if(slot){const ww=sets.find(s=>s.weight!=='')?.weight||0;const wasOpen=!!slot.querySelector('details')?.open;slot.innerHTML=`<details class="warmup-disclosure" ${wasOpen?'open':''}><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(editing.day,ex,ww)}</details>`;slot.querySelectorAll('[data-warmup-rest]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.warmupLabel,Number(b.dataset.warmupRest)));}}}
+function refreshCardMetrics(e){const card=e.target.closest('.exercise');if(!card)return;const ex=effectivePlanForSession(state.member,editing.week)[editing.day].exercises.find(x=>x[0]===card.dataset.exercise);const sets=[...card.querySelectorAll('.set-table:not(.header)')].map(r=>({weight:r.querySelector('.set-weight').value,reps:r.querySelector('.set-reps').value}));const mt=metrics({sets},ex);card.querySelector('.top-val').textContent=mt.top||'—';card.querySelector('.reps-val').textContent=mt.reps||'—';card.querySelector('.volume-val').textContent=mt.volume?Math.round(mt.volume):'—';if(e.target.classList.contains('set-weight')){const quick=card.querySelector('[data-plate-ex]');if(quick){const ww0=sets.find(s=>s.weight!=='')?.weight||0;quick.dataset.plateWeight=ww0;quick.textContent=`🧮 ${ww0?ww0+' lb':'Plates'}`;}const slot=card.querySelector('.warmup-slot');if(slot){const ww=sets.find(s=>s.weight!=='')?.weight||0;const wasOpen=!!slot.querySelector('details')?.open;slot.innerHTML=`<details class="warmup-disclosure" ${wasOpen?'open':''}><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(editing.day,ex,ww)}</details>`;slot.querySelectorAll('[data-warmup-rest]').forEach(b=>b.onclick=()=>startRestTimer(b.dataset.warmupLabel,Number(b.dataset.warmupRest)));}}}
 function startRestTimer(exercise,seconds){ if(window.BarbarianRestTimer) window.BarbarianRestTimer.start(exercise, seconds||window.BarbarianRest.DEFAULT_SECONDS); }
 
 function exerciseOptions(selected){
