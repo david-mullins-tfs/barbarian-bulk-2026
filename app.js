@@ -298,7 +298,7 @@ function dayComplete(member,week,day){
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 function render(){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.route===route));
-  const app=document.getElementById('app'); if(route==='home') app.innerHTML=homeView(); else if(route==='progress') app.innerHTML=progressView(); else if(route==='volume') app.innerHTML=volumeView(); else if(route==='macros') app.innerHTML=macrosView(); else if(route==='cardio') app.innerHTML=cardioView(); else if(route==='plates') app.innerHTML=platesView(); else if(route==='notes') app.innerHTML=notesView(); else if(route==='program') app.innerHTML=programEditorView(); else if(route==='library') app.innerHTML=programLibraryView(); else app.innerHTML=settingsView(); const h=document.querySelector('.header-program');if(h)h.textContent=' / '+PROGRAM_DETAILS[activeProgramFor(state.member)].short;bind();}
+  const app=document.getElementById('app'); if(route==='home') app.innerHTML=homeView(); else if(route==='progress') app.innerHTML=progressView(); else if(route==='volume') app.innerHTML=volumeView(); else if(route==='macros') app.innerHTML=macrosView(); else if(route==='cardio') app.innerHTML=cardioView(); else if(route==='plates') app.innerHTML=platesView(); else if(route==='notes') app.innerHTML=notesView(); else if(route==='program') app.innerHTML=programEditorView(); else if(route==='library') app.innerHTML=programLibraryView(); else if(route==='artwork') app.innerHTML=artworkGalleryView(); else app.innerHTML=settingsView(); const h=document.querySelector('.header-program');if(h)h.textContent=' / '+PROGRAM_DETAILS[activeProgramFor(state.member)].short;bind();}
 
 function homeView(){
   if(editing) return workoutView(editing.week,editing.day);
@@ -308,7 +308,7 @@ function homeView(){
     <div style="margin-top:15px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px"><span>Week completion</span><b>${pct}%</b></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
   </section>
   ${activeProgramFor(m)===BULK_ID?'<article class="progress-item" style="margin:14px 0"><div class="field-label">UPCOMING PROGRAM · 12 WEEKS</div><div class="exercise-name">Winter Specialization — Conan Cut</div><p class="muted" style="margin:7px 0">5 training days/week · Fat loss and arms/shoulders specialization · Barbarian Bulk history will be preserved.</p><button class="secondary" data-route="library">View Conan Cut in Program Library</button></article>':''}
-  <div class="action-row" style="margin:14px 0"><button class="secondary" data-route="library">⚔️ Program Library</button></div><div class="section-title">Training days</div><div class="day-grid">${days.map(day=>dayCard(m,w,day)).join('')}</div>
+  <div class="action-row" style="margin:14px 0"><button class="secondary" data-route="library">⚔️ Program Library</button><button class="secondary" data-route="artwork">🖼️ Exercise Gallery</button></div><div class="section-title">Training days</div><div class="day-grid">${days.map(day=>dayCard(m,w,day)).join('')}</div>
   <div class="section-title">Program notes</div><div class="info">Choose a starting weight. Keep that weight until all target sets reach the top of the range. Then add 5 lb next session and start the rep target back at the bottom.</div>`;
 }
 function dayCard(m,w,day){
@@ -419,7 +419,22 @@ function warmupView(day,ex,workingWeight){
   return `<div class="warmup-block"><div class="warmup-title">Suggested warm-up · ${kind==='main'?'full ramp':'acclimation'}</div>${ramp.map((x,i)=>`<div class="warmup-row"><div><b>${x.weight} lb × ${x.reps}</b><span>Warm-up ${i+1} · rest ${window.BarbarianRest.formatTime(x.rest)}</span></div><button class="secondary warmup-rest" data-warmup-rest="${x.rest}" data-warmup-label="${esc(ex[0])} warm-up ${i+1}">▶ Rest ${window.BarbarianRest.formatTime(x.rest)}</button></div>`).join('')}<div class="warmup-foot">Based on ${w} lb working weight. Warm-ups are suggestions and do not count toward Weekly Volume or double progression.</div></div>`;
 }
 
-function exerciseArt(name){if(CONAN_NO_ART.has(name))return './exercise-art/atlas-movement-placeholder.svg';return './exercise-art/'+String(name).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.svg';}
+function exerciseArt(name){
+  const image=window.AtlasArtwork?.startUrl(name);
+  if(image)return image;
+  if(CONAN_NO_ART.has(name))return './exercise-art/atlas-movement-placeholder.svg';
+  return './exercise-art/'+String(name).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.svg';
+}
+function bindArtFallback(root){
+  root.querySelectorAll('img[data-art-reference]').forEach(img=>{
+    img.addEventListener('error',()=>{
+      if(img.dataset.fallbackDone)return;
+      img.dataset.fallbackDone='1';
+      img.classList.remove('atlas-art-reference');
+      img.src='./exercise-art/atlas-movement-placeholder.svg';
+    });
+  });
+}
 const ATLAS_PILOT = {
   'Pec Deck': {art:'pec-deck', cues:['Adjust the seat so handles align near mid-chest.','Keep your back supported and feet planted.','Bring the handles together smoothly; avoid shrugging.','Return slowly within a comfortable range.'],positions:['Start: seated, chest up, arms open.','Finish: seated, handles together in front of chest.']},
   'Barbell Bench Press': {art:'barbell-bench-press', cues:['Lie on a flat bench with feet planted.','Set your shoulder blades firmly against the bench.','Lower the bar with control toward the chest.','Press upward while staying supported on the bench.'],positions:['Start: lying on the flat bench, bar near chest.','Finish: still lying on the flat bench, arms extended.']},
@@ -427,23 +442,31 @@ const ATLAS_PILOT = {
 };
 function openExerciseDetail(name){
   const meta=window.BarbarianExercises?.metadata(name);
-  const dlg=document.getElementById('exerciseDetailDialog'); if(!dlg)return;
+  const dlg=document.getElementById('exerciseDetailDialog');if(!dlg)return;
   const muscles=meta?[meta.primary,...(meta.secondary||[])].join(' · '):'Not categorized';
   const range=meta?`${meta.min}–${meta.max} reps`:'See programmed sets';
   const pilot=ATLAS_PILOT[name];
-  const pilotArt=pilot?`./exercise-art/${pilot.art}-pilot.webp`:exerciseArt(name);
+  const newArt=!pilot?window.AtlasArtwork?.entry(name):null;
+  const mainArt=pilot
+    ? `<img class="atlas-detail-art" src="./exercise-art/${pilot.art}-pilot.webp" alt="${esc(name)} vintage illustration">`
+    :newArt
+      ? `<div class="atlas-art-frames"><div><small>START POSITION</small><img class="atlas-art-reference" data-art-reference src="${newArt.start}" alt="${esc(name)} start position illustration" loading="lazy"></div><div><small>FINISH POSITION</small><img class="atlas-art-reference" data-art-reference src="${newArt.end}" alt="${esc(name)} finish position illustration" loading="lazy"></div></div>`
+      :`<img class="atlas-detail-art" src="${exerciseArt(name)}" alt="${esc(name)} illustration">`;
   const guide=pilot?`<div class="atlas-pilot-positions">${pilot.positions.map((t,i)=>`<div><small>${i?'FINISH':'START'}</small><img class="atlas-position-art" src="./exercise-art/${pilot.art}-${i?'finish':'start'}-v32.webp" alt="${esc(name)} ${i?'finish':'start'} position illustration"><span>${esc(t)}</span></div>`).join('')}</div><div class="atlas-pilot-cues"><small>TECHNIQUE & SETUP</small><ul>${pilot.cues.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:'';
-  dlg.innerHTML=`<div class="atlas-detail-top"><div><div class="exercise-index">ATLAS MOVEMENT LIBRARY ${pilot?'· ILLUSTRATION PILOT V32':''}</div><h2>${esc(name)}</h2></div><button type="button" class="icon-btn" data-detail-close aria-label="Close details">×</button></div><img class="atlas-detail-art" src="${pilotArt}" alt="Vintage illustration of ${esc(name)}"><div class="atlas-detail-grid"><div><small>PRIMARY / SECONDARY</small><strong>${esc(muscles)}</strong></div><div><small>DEFAULT TARGET</small><strong>${range}</strong></div><div><small>EQUIPMENT</small><strong>${esc(meta?.equipment||'See exercise')}</strong></div></div>${guide}<p class="atlas-detail-note">${pilot?'Pilot illustration: visual reference only, not a verified coaching diagram. Follow qualified instruction and your equipment’s guidance.':'Illustration is a stylized movement reference, not a technical coaching diagram. Use a controlled range of motion and adjust setup to your equipment and comfort.'}</p>`;
+  const reviewNote=newArt?.review?`<div class="info atlas-art-warning"><b>Variation to review:</b> ${esc(newArt.review)}</div>`:'';
+  dlg.innerHTML=`<div class="atlas-detail-top"><div><div class="exercise-index">ATLAS MOVEMENT LIBRARY · ${pilot?'ORIGINAL ENGRAVING':'V36 ILLUSTRATED REFERENCE'}</div><h2>${esc(name)}</h2></div><button type="button" class="icon-btn" data-detail-close aria-label="Close details">×</button></div>${mainArt}<div class="atlas-detail-grid"><div><small>PRIMARY / SECONDARY</small><strong>${esc(muscles)}</strong></div><div><small>DEFAULT TARGET</small><strong>${range}</strong></div><div><small>EQUIPMENT</small><strong>${esc(meta?.equipment||'See exercise')}</strong></div></div>${guide}${reviewNote}<p class="atlas-detail-note">${pilot?'Original ATLAS engraving; visual reference only. Follow qualified instruction and equipment guidance.':'CC0 reference illustration with ATLAS gold-tone treatment. AI-created source artwork may differ from your equipment or technique. Do not use an illustration as a substitute for qualified instruction.'}</p>`;
   dlg.querySelector('[data-detail-close]').onclick=()=>dlg.close();
+  bindArtFallback(dlg);
   dlg.showModal();
 }
+
 function exerciseCard(m,w,day,ex,index=0){
   if(ex[1]===0) return `<article class="exercise"><div class="exercise-head"><div><div class="exercise-name">${esc(ex[0])}</div><div class="range">Each</div></div></div><p class="muted" style="margin:12px 0 0">Accessory/superset note from the original program.</p></article>`;
   const log=sessionRows(m,w,day,ex[0]); const mt=metrics(log,ex);if(recoveryWasReduced(m,w,day,ex[0]))mt.ready=false; const suggested=log.workingWeight||0; const isSaved=getLog(m,w,day,ex[0]);
   const loggedCount=log.sets.filter(s=>s.reps!=='' && s.reps!=null && Number(s.reps)>0).length;
   const status=loggedCount>=ex[1]?'complete':loggedCount>0?'active':'ready';
   const superset=(day==='Friday' && (ex[0]==='EZ Curl'||ex[0]==='Triceps Pushdown'))?'<span class="superset-badge">SUPERSET A</span>':'';
-  return `<article class="exercise exercise-${status}" data-exercise="${esc(ex[0])}"><div class="exercise-head"><button type="button" class="exercise-illustration" data-exercise-detail="${esc(ex[0])}" aria-label="View ${esc(ex[0])} exercise details"><img src="${ATLAS_PILOT[ex[0]]?`./exercise-art/${ATLAS_PILOT[ex[0]].art}-pilot.webp`:exerciseArt(ex[0])}" alt="${esc(ex[0])} movement illustration" loading="lazy" width="110" height="88"></button><div class="exercise-heading"><div class="exercise-index">EXERCISE ${String(index+1).padStart(2,'0')} · ${status==='complete'?'COMPLETE':status==='active'?'IN PROGRESS':'READY'}</div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div><button class="plate-quick" data-plate-ex="${esc(ex[0])}" data-plate-weight="${suggested||''}" aria-label="Plate count for ${esc(ex[0])}">🧮 ${suggested?suggested+' lb':'Plates'}</button>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
+  return `<article class="exercise exercise-${status}" data-exercise="${esc(ex[0])}"><div class="exercise-head"><button type="button" class="exercise-illustration" data-exercise-detail="${esc(ex[0])}" aria-label="View ${esc(ex[0])} exercise details"><img src="${ATLAS_PILOT[ex[0]]?`./exercise-art/${ATLAS_PILOT[ex[0]].art}-pilot.webp`:exerciseArt(ex[0])}" alt="${esc(ex[0])} movement illustration" ${ATLAS_PILOT[ex[0]]?'':'class="atlas-art-reference" data-art-reference'} loading="lazy" width="110" height="88"></button><div class="exercise-heading"><div class="exercise-index">EXERCISE ${String(index+1).padStart(2,'0')} · ${status==='complete'?'COMPLETE':status==='active'?'IN PROGRESS':'READY'}</div><div class="exercise-name">${esc(ex[0])}</div><div class="range">${targetText(ex)} reps · ${isSaved?'saved':'ready to log'} ${superset}</div></div><button class="plate-quick" data-plate-ex="${esc(ex[0])}" data-plate-weight="${suggested||''}" aria-label="Plate count for ${esc(ex[0])}">🧮 ${suggested?suggested+' lb':'Plates'}</button>${mt.ready?(ex[0]==='Assisted Chin-Ups'?'<span class="add-badge">REDUCE 5 LB ASSISTANCE</span>':'<span class="add-badge">ADD 5 LB NEXT</span>'):'<span class="keep-badge">KEEP WEIGHT</span>'}</div>
     <details class="exercise-more"><summary aria-label="Exercise options for ${esc(ex[0])}" title="Exercise options">••• <span>Options</span></summary><div class="exercise-actions"><button type="button" class="secondary" data-swap-slot="${index}">⇄ Swap exercise</button><button type="button" class="secondary" data-skip-slot="${index}">▷ Skip for today</button></div></details>
     <div class="warmup-slot"><details class="warmup-disclosure"><summary>Warm-up <span>· Tap to view</span></summary>${warmupView(day,ex,suggested)}</details></div>
     <div class="set-table header"><div>Set</div><div>Weight</div><div>Reps</div><div>Note</div><div></div></div>
@@ -590,6 +613,19 @@ function programLibraryView(){
     return `<article class="progress-item"><div class="top"><div><div class="field-label">${label.toUpperCase()} · ${program.weeks} WEEKS</div><div class="exercise-name">${esc(program.name)}</div><div class="muted">${esc(program.goal)} · ${days} training days/week</div></div></div>${selected?'<div class="info">Current program for this member.</div>':`<div class="action-row" style="margin-top:12px"><button class="primary" data-activate-program="${program.id}">${program.id===CUT_ID&&!started?'Start Conan Cut':'Switch to '+esc(program.short)}</button></div>`}</article>`;
   }).join('')}</div><div class="section-title">Conan Cut · Full Draft</div><div class="info">Monday–Friday · 25 exercises · 73 working sets/week. Double progression (start with +5 lb when prescribed sets reach the top of their ranges). Calorie deficit and individualized protein targets to be set separately; no bulk surplus is imported. Preview only: Conan Cut remains upcoming until a member starts it.</div><div class="progress-list">${preview}</div>`;
 }
+function artworkGalleryView(){
+  const list=window.BarbarianExercises?.all?.()||[];
+  const categories=[...new Set(list.map(item=>item.category))].sort();
+  const totalNew=list.filter(item=>window.AtlasArtwork?.isMapped(item.name)).length;
+  const tiles=list.map(item=>{
+    const name=item.name,pilot=ATLAS_PILOT[name],match=window.AtlasArtwork?.entry(name);
+    const url=pilot?`./exercise-art/${pilot.art}-pilot.webp`:exerciseArt(name);
+    const flagged=!!match?.review;
+    return `<button type="button" class="atlas-gallery-card" data-exercise-detail="${esc(name)}" data-gallery-name="${esc(name.toLowerCase())}" data-gallery-category="${esc(item.category)}" aria-label="Review artwork for ${esc(name)}"><div class="atlas-gallery-image"><img src="${url}" alt="${esc(name)} exercise illustration" loading="lazy" ${pilot?'':'data-art-reference class="atlas-art-reference"'}></div><div class="atlas-gallery-description"><b>${esc(name)}</b><small>${esc(item.category)} · ${pilot?'ATLAS original':flagged?'Variation to review':'CC0 reference'}</small></div>${flagged?'<span class="atlas-gallery-flag" title="Review exercise variant">!</span>':''}</button>`;
+  }).join('');
+  return `<section class="hero"><div class="field-label">ATLAS V36 · EXERCISE ART REVIEW</div><h2>Exercise Gallery</h2><p>${list.length} exercise entries · ${totalNew} refreshed illustrations · 3 original ATLAS engravings kept. Review each movement and equipment before relying on an image for setup.</p><div class="select-row"><div><label class="field-label">Search exercises</label><input id="artSearch" class="input" type="search" placeholder="Search movement..." autocomplete="off"></div><div><label class="field-label">Category</label><select id="artCategory" class="select"><option value="">All categories</option>${categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div></div></section><div class="info">Gold-toned CC0 illustrations appear for 55 movements. Tap a card to compare start and finish positions. The <b>!</b> symbol flags a variation or piece of equipment needing verification. Images are references, not coaching diagrams. Viewed images can be cached for offline use.</div><div class="atlas-gallery-grid">${tiles}</div><p class="atlas-art-license">CC0 illustrations: <a href="https://github.com/MarvinNazari/exercise-images" rel="noreferrer" target="_blank">Open Exercise Illustrations</a>. Original ATLAS squat, bench and Pec Deck artwork is preserved.</p>`;
+}
+
 function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Program</div><article class="progress-item"><div class="top"><div><div class="exercise-name">Customize the program</div><div class="muted">Choose exercises, sets, and rep ranges by member, week and day for the active program.</div></div><button class="secondary" data-route="program">Edit Program</button></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Program Library</div><div class="muted">Barbarian Bulk and Conan Cut · member-specific cycles.</div></div><button class="secondary" data-route="library">View Programs</button></div></article><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">${WEEKS} weeks · ${daysFor(state.member).join(', ')}</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
 
 function bind(){
@@ -598,6 +634,18 @@ function bind(){
   const ed=document.getElementById('editorDay'); if(ed)ed.onchange=()=>{state.editorDay=ed.value;render()};
   const ew=document.getElementById('editorWeek'); if(ew)ew.onchange=()=>{state.editorWeek=Number(ew.value);render()};
   const sp=document.querySelector('[data-save-program]'); if(sp)sp.onclick=saveProgramChanges;
+  const artSearch=document.getElementById('artSearch'),artCategory=document.getElementById('artCategory');
+  if(artSearch||artCategory){
+    const filter=()=>{
+      const q=(artSearch?.value||'').toLowerCase().trim(),cat=artCategory?.value||'';
+      document.querySelectorAll('.atlas-gallery-card').forEach(card=>{
+        card.hidden=!!((q&&!card.dataset.galleryName.includes(q))||(cat&&card.dataset.galleryCategory!==cat));
+      });
+    };
+    if(artSearch)artSearch.oninput=filter;
+    if(artCategory)artCategory.onchange=filter;
+  }
+  bindArtFallback(document.getElementById('app'));
   const rp=document.querySelector('[data-recovery-preview]');if(rp)rp.onclick=reviewRecovery;
   const ra=document.querySelector('[data-recovery-apply]');if(ra)ra.onclick=()=>applyRecovery(false);
   const rs=document.querySelector('[data-recovery-standard]');if(rs)rs.onclick=()=>applyRecovery(true);

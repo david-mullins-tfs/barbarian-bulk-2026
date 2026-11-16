@@ -1,7 +1,7 @@
-const CACHE = 'heldkraft-atlas-v35-recovery-checkin';
+const CACHE = 'heldkraft-atlas-v36-art-gallery';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
-  './volume.js', './atlas-programs.js', './atlas-recovery.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
+  './volume.js', './atlas-programs.js', './atlas-recovery.js', './atlas-art-v36.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png', './exercise-art/atlas-movement-placeholder.svg',
   './exercise-art/barbell-back-squat-finish-v31.webp',
   './exercise-art/pec-deck-start-v32.webp', './exercise-art/pec-deck-finish-v32.webp', './exercise-art/barbell-bench-press-start-v32.webp', './exercise-art/barbell-bench-press-finish-v32.webp', './exercise-art/barbell-back-squat-start-v32.webp', './exercise-art/barbell-back-squat-finish-v32.webp',
@@ -31,6 +31,7 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
   const sameOrigin = url.origin === self.location.origin;
+  const approvedIllustration = url.hostname === 'raw.githubusercontent.com' && url.pathname.startsWith('/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/');
   const appShell = sameOrigin && /\.(?:html|js|css)$/.test(url.pathname);
   const navigation = request.mode === 'navigate';
 
@@ -50,7 +51,7 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(request).then(cached => cached || fetch(request).then(response => {
       const copy = response.clone();
-      if (sameOrigin) caches.open(CACHE).then(cache => cache.put(request, copy));
+      if (sameOrigin || approvedIllustration) caches.open(CACHE).then(cache => cache.put(request, copy)).catch(() => {});
       return response;
     }))
   );
