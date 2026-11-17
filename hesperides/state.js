@@ -65,7 +65,8 @@
     if(!Object.values(macros).every(x=>Number.isFinite(x)&&x>=0&&x<=500))throw Error('Macros must be 0–500 g per serving.');
     const existing=food.id?list.find(x=>x.id===food.id):null;
     if(food.id&&!existing)throw Error('Food no longer exists');
-    const entry={id:existing?.id||id(),name,serving,...macros};
+    const entry={id:existing?.id||id(),name,serving,...macros,
+      source:food.source||existing?.source||'',sourceId:food.sourceId||existing?.sourceId||''};
     if(existing)Object.assign(existing,entry);else list.push(entry);
     persist();return entry;
   }

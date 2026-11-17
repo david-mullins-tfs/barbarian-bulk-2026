@@ -42,3 +42,21 @@ input[type=date]{color-scheme:dark}select{color-scheme:dark}input[type=number]{f
 .modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h3{margin:0}.close-button{border:0;background:none;color:var(--gold);font-size:28px}.modal-card{padding:3px}
 .toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,14px);opacity:0;transition:.2s;pointer-events:none;z-index:60;background:#b9945c;color:#111b1c;border-radius:12px;padding:10px 15px;font-size:12px;font-weight:800;max-width:92vw;text-align:center}.toast.visible{opacity:1;transform:translate(-50%,0)}
 @media(max-width:375px){.brand strong{font-size:20px}.brand small{font-size:8px}.selection-bar{gap:7px}.meal-summary b{font-size:17px}.triad{gap:6px}.meal-card{padding:12px}.app-shell{padding:12px 10px 28px}.status{font-size:9px}.btn{padding:9px 10px}}
+
+/* HESPERIDES v1.1 — gold-app tagline and USDA food lookup preview */
+.brand em{color:#E7BB79;letter-spacing:.15em}
+.usda-panel{border-top:2px solid #C59A59}
+.usda-form{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin:13px 0}
+.usda-form .field{flex:1;min-width:190px;margin:0}
+.usda-form .field>span{font-size:11px;color:#AAB7B3;font-weight:750}
+.usda-form .field input{width:100%;color:#E8DCC7;background:#162328;border:1px solid #53615F;padding:10px;border-radius:11px;min-height:44px}
+.usda-form .btn{min-height:44px}
+.usda-results{display:grid;gap:8px;max-height:380px;overflow-y:auto;margin:12px 0}
+.usda-count{font-size:11px;color:#B6C5B9}
+.usda-item{border:1px solid #455750;background:#172426;border-radius:11px;padding:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.usda-item>div:first-child{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.usda-item strong{font-size:12px;line-height:1.35}
+.usda-item small{font-size:10px;color:#AAB7B3;line-height:1.4}
+.usda-actions{display:flex;flex-direction:column;gap:6px;align-items:center}
+.usda-source{font-size:10px;color:#E4BD82;text-decoration:underline}
+@media(max-width:400px){.usda-form .field{min-width:100%}.usda-form .btn{width:100%}.usda-item{align-items:stretch}.usda-actions{align-items:stretch}.usda-source{text-align:center}}

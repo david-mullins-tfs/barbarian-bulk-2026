@@ -61,7 +61,7 @@
   }
   function today(date){
     const ctx=context(date),{p,d,target,consumed,planned,status}=ctx;
-    return '<section class="hero"><small class="eyebrow">HELDKRAFT · HESPERIDES</small><h2>Nutrition, Measured.</h2><p>Plan deliberately. Eat intentionally. Track what actually matters.</p>'+navControls(date)
+    return '<section class="hero"><small class="eyebrow">HELDKRAFT · HESPERIDES</small><h2>Eat Like a God.</h2><p><strong>Nutrition, Measured.</strong> Plan deliberately. Eat intentionally. Track what actually matters.</p>'+navControls(date)
       +'<div class="day-intro"><div><small>DAILY STATUS</small><div class="calories-display">'+metric(consumed.calories)+' <span>/ '+(target?metric(C.calories(target)):'—')+' kcal</span></div></div>'+dayBadge(status)+'</div>'
       +(target?'<div class="meta-line">Goal: '+esc(C.GOALS[p.goal]||'Custom')+' · '+d.mealCount+' meals/day · '+viewDate(date)+'</div>':'<div class="notice">Start with Goals to calculate calorie and macro targets.</div>')+'</section>'
       +'<section class="panel"><div class="section-header"><h3>Macro progress</h3><span class="subtle">Consumed, not planned</span></div>'+macroOverview(consumed,target)
@@ -86,7 +86,10 @@
   function foods(date){
     const list=[...S.foodList()].sort((a,b)=>a.name.localeCompare(b.name));
     return '<section class="hero"><small class="eyebrow">YOUR FOOD LIBRARY</small><h2>Foods & portions</h2><p>Use values from each food label or trusted nutrition information. Macros are per serving and calories are calculated automatically.</p>'
-      +navControls(date,false)+'</section><section class="panel"><h3 id="foodFormTitle">Add a food</h3>'
+      +navControls(date,false)+'</section><section class="panel usda-panel"><div class="section-header"><h3>Search USDA Food Database</h3><span class="status pending">Preview</span></div><p class="subtle">Find common foods or branded products and review their protein, carbs and fat per 100 g.</p>'
+      +'<form id="usdaSearchForm" class="usda-form"><label class="field"><span>Search food name</span><input id="usdaQuery" type="search" maxlength="80" placeholder="e.g. chicken breast, Greek yogurt" autocomplete="off" required minlength="2"></label><button class="btn" type="submit">Search foods</button></form>'
+      +'<div id="usdaResults" aria-live="polite" class="usda-results"><p class="subtle">Enter at least two letters and tap Search.</p></div>'
+      +'<p class="subtle">Source: <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer">USDA FoodData Central</a> (public domain). Uses a limited DEMO_KEY for preview. Search may be unavailable or rate-limited; manual entry remains available. Verify labels, preparation and serving amounts.</p></section><section class="panel"><h3 id="foodFormTitle">Add a food</h3>'
       +'<div class="field"><label for="foodName">Food name</label><input id="foodName" maxlength="100" placeholder="e.g. Greek yogurt, plain"></div>'
       +'<div class="field"><label for="foodServing">Serving description</label><input id="foodServing" maxlength="80" placeholder="e.g. 170 g cup"></div>'
       +'<div class="triad"><div class="field"><label for="foodProtein">Protein (g)</label><input id="foodProtein" type="number" min="0" max="500" step="0.1" placeholder="0"></div>'
@@ -95,7 +98,17 @@
       +'<div class="action-row"><button class="btn" data-action="save-food" id="saveFoodButton">Save food</button><button class="btn outline" data-action="cancel-edit-food">Clear</button></div>'
       +'</section><div class="section-header section-outside"><h3>Saved foods</h3><span class="subtle">'+list.length+' foods</span></div>'
       +'<input class="select food-search" id="foodSearch" type="search" placeholder="Search foods…" autocomplete="off">'
-      +'<div class="food-library">'+(list.length?list.map(x=>'<article class="food-tile" data-food-name="'+esc(x.name.toLowerCase())+'"><div><strong>'+esc(x.name)+'</strong><small>'+esc(x.serving)+' · '+metric(C.calories(x))+' kcal</small><small>P '+metric(x.protein)+' · C '+metric(x.carbs)+' · F '+metric(x.fat)+' g</small></div><div class="tile-actions"><button class="tiny" data-action="edit-food" data-id="'+esc(x.id)+'">Edit</button><button class="tiny muted-button" data-action="delete-food" data-id="'+esc(x.id)+'">Delete</button></div></article>').join(''):'<p class="notice">No foods added yet. Start with a food and its macros per serving.</p>')+'</div>';
+      +'<div class="food-library">'+(list.length?list.map(x=>'<article class="food-tile" data-food-name="'+esc(x.name.toLowerCase())+'"><div><strong>'+esc(x.name)+'</strong><small>'+esc(x.serving)+' · '+metric(C.calories(x))+' kcal</small><small>P '+metric(x.protein)+' · C '+metric(x.carbs)+' · F '+metric(x.fat)+' g</small>'+(x.source?'<small>'+esc(x.source)+(x.sourceId?' · #'+esc(x.sourceId):'')+'</small>':'')+'</div><div class="tile-actions"><button class="tiny" data-action="edit-food" data-id="'+esc(x.id)+'">Edit</button><button class="tiny muted-button" data-action="delete-food" data-id="'+esc(x.id)+'">Delete</button></div></article>').join(''):'<p class="notice">No foods added yet. Start with a food and its macros per serving.</p>')+'</div>';
+  }
+  function usdaResultsView(lookup){
+    const status=String(lookup?.status||'').trim(),list=Array.isArray(lookup?.results)?lookup.results:[];
+    if(lookup?.loading)return '<p class="subtle" role="status">Searching USDA foods…</p>';
+    if(!list.length)return '<p class="subtle" role="status">'+esc(status||'Search by name to look up nutrition information.')+'</p>';
+    return '<div class="usda-count">'+list.length+' foods with complete macro data · per 100 g. Check the actual label.</div>'
+      +list.map((item,i)=>'<div class="usda-item"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.type)+' · per 100 g · '+metric(item.calories)+' kcal</small>'
+        +'<small>P '+metric(item.protein)+' g · C '+metric(item.carbs)+' g · F '+metric(item.fat)+' g</small></div>'
+        +'<div class="usda-actions"><button type="button" class="btn outline small" data-action="use-usda" data-index="'+i+'">Review & save</button>'
+        +'<a href="'+esc(item.sourceUrl)+'" target="_blank" rel="noopener noreferrer" class="usda-source">USDA record ↗</a></div></div>').join('');
   }
   function goals(date){
     const p=S.profile(),has=p.target!=null;
@@ -143,5 +156,5 @@
     if(view==='history')return history(date);
     return today(date);
   }
-  root.HesperidesUI={screen,context,esc,int,navControls,mealCard};
+  root.HesperidesUI={screen,context,esc,int,navControls,mealCard,usdaResultsView};
 })(typeof window!=='undefined'?window:globalThis);

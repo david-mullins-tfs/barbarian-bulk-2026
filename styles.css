@@ -216,3 +216,8 @@ body{background:#151B23;color:#E8DCC7}
 .atlas-link-button{display:inline-flex;align-items:center;text-decoration:none;border:1px solid #56616D;border-radius:11px;padding:11px 14px;min-height:44px}
 .atlas-external-menu{display:block;text-decoration:none}
 @media(max-width:390px){.atlas-library-thumb{width:62px;height:60px}.atlas-library-row{gap:8px;min-height:72px}.atlas-four-tabs .nav-btn small{font-size:10px}}
+
+/* ATLAS v37.1 — campaign tagline */
+.atlas-brand-promise{font-family:Georgia,serif;font-size:21px;letter-spacing:.045em;color:#E3B673;font-weight:800;line-height:1.25;margin:0 0 13px}
+.atlas-brand-promise small{display:block;font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;color:#B5C1C8;margin-top:5px}
+@media(max-width:375px){.atlas-brand-promise{font-size:19px}}

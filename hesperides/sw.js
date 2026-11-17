@@ -1,5 +1,5 @@
-const CACHE='heldkraft-hesperides-v1';
-const ASSETS=['./','./index.html','./styles.css','./app.js','./ui.js','./state.js','./core.js','./manifest.webmanifest','./icon.svg'];
+const CACHE='heldkraft-hesperides-v1-1';
+const ASSETS=['./','./index.html','./styles.css','./app.js','./ui.js','./state.js','./core.js','./food-db.js','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(
   caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())
 ));

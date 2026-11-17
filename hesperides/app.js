@@ -1,8 +1,9 @@
 (function(root){
   'use strict';
-  const C=root.HesperidesCore,S=root.HesperidesStore,UI=root.HesperidesUI;
-  if(!C||!S||!UI)throw Error('Hesperides modules must load before app.js');
-  const state={date:localDate(new Date()),view:'today',editingFoodId:null};
+  const C=root.HesperidesCore,S=root.HesperidesStore,UI=root.HesperidesUI,DB=root.HesperidesFoodDB;
+  if(!C||!S||!UI||!DB)throw Error('Hesperides modules must load before app.js');
+  const state={date:localDate(new Date()),view:'today',editingFoodId:null,
+    selectedUsda:null,usda:{query:'',results:[],status:'',loading:false},requestSeq:0};
   root.HesperidesApp=state;
   function localDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function yesterday(date){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()-1);return localDate(d);}
@@ -14,6 +15,12 @@
   }
   function render(){
     node('app').innerHTML=UI.screen(state.view,state.date);
+    if(state.view==='foods'){
+      const search=node('usdaSearchForm'),query=node('usdaQuery');
+      if(query)query.value=state.usda.query;
+      if(search)search.onsubmit=e=>{e.preventDefault();searchUsda();};
+      renderUsda();
+    }
     document.querySelectorAll('[data-tab]').forEach(btn=>{
       const active=btn.dataset.tab===state.view;
       btn.classList.toggle('active',active);
@@ -57,18 +64,62 @@
       catch(err){alert(err.message);}
     };
   }
+  function renderUsda(){
+    if(state.view!=='foods')return;
+    const result=node('usdaResults');
+    if(result)result.innerHTML=UI.usdaResultsView(state.usda);
+  }
+  async function searchUsda(){
+    if(state.usda.loading)return;
+    const query=val('usdaQuery').trim();
+    state.usda.query=query;state.usda.loading=true;
+    state.usda.results=[];state.usda.status='';renderUsda();
+    const seq=++state.requestSeq,member=S.current();
+    try{
+      const response=await DB.search(query);
+      if(seq!==state.requestSeq||member!==S.current())return;
+      state.usda.results=response.results;
+      state.usda.status=response.results.length?'':response.found
+        ?'Matching foods were missing complete protein, carbohydrate or fat data. Enter macros manually.'
+        :'No matching foods found. Try a shorter name or manual entry.';
+    }catch(err){
+      if(seq!==state.requestSeq||member!==S.current())return;
+      state.usda.results=[];state.usda.status=err.message||'Search unavailable. Enter food manually.';
+    }finally{
+      if(seq===state.requestSeq){state.usda.loading=false;renderUsda();}
+    }
+  }
+  function chooseUsda(index){
+    const item=state.usda.results[Number(index)];
+    if(!item)throw Error('That USDA result is no longer available. Search again.');
+    state.selectedUsda=item;state.editingFoodId=null;
+    for(const [id,value] of Object.entries({
+      foodName:item.name,foodServing:'100 g',foodProtein:item.protein,foodCarbs:item.carbs,foodFat:item.fat
+    })){
+      const element=node(id);if(element)element.value=String(value);
+    }
+    const heading=node('foodFormTitle');
+    if(heading)heading.textContent='Review USDA nutrition before saving';
+    const button=node('saveFoodButton');if(button)button.textContent='Save reviewed food';
+    notice('Review nutrition per 100 g, then tap Save food. Labels may vary.');
+    node('foodName')?.focus();
+    root.scrollTo?.({top:0,behavior:'smooth'});
+  }
   function saveFood(){
     try{
       const existing=state.editingFoodId;
       S.saveFood({id:existing,name:val('foodName'),serving:val('foodServing'),
-        protein:val('foodProtein'),carbs:val('foodCarbs'),fat:val('foodFat')});
-      state.editingFoodId=null;render();notice(existing?'Food updated; prior entries retain original macros':'Food added to library');
+        protein:val('foodProtein'),carbs:val('foodCarbs'),fat:val('foodFat'),
+        source:state.selectedUsda?'USDA FoodData Central':'',
+        sourceId:state.selectedUsda?.id||''});
+      state.editingFoodId=null;state.selectedUsda=null;render();
+      notice(existing?'Food updated; prior entries retain original macros':'Food saved. Add it to a meal from Plan.');
     }catch(err){alert(err.message);}
   }
   function editFood(id){
     const f=S.foodList().find(x=>x.id===id);if(!f)return;
     if(state.view!=='foods'){state.view='foods';render();}
-    state.editingFoodId=id;
+    state.editingFoodId=id;state.selectedUsda=null;
     for(const [key,value] of Object.entries({foodName:f.name,foodServing:f.serving,foodProtein:f.protein,foodCarbs:f.carbs,foodFat:f.fat}))node(key).value=value;
     node('foodFormTitle').textContent='Edit '+f.name;node('saveFoodButton').textContent='Update food';
     node('foodName').focus();window.scrollTo?.({top:0,behavior:'smooth'});
@@ -124,7 +175,8 @@
         addFoodDialog(btn.dataset.type,Number(btn.dataset.meal));break;
       case 'save-food':saveFood();break;
       case 'edit-food':editFood(btn.dataset.id);break;
-      case 'cancel-edit-food':state.editingFoodId=null;render();break;
+      case 'cancel-edit-food':state.editingFoodId=null;state.selectedUsda=null;render();break;
+      case 'use-usda':chooseUsda(btn.dataset.index);break;
       case 'delete-food':{
         const item=S.foodList().find(f=>f.id===btn.dataset.id);
         if(item&&confirm('Remove '+item.name+' from the food library? Previously logged nutrition remains intact.')){

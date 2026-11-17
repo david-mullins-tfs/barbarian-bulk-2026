@@ -303,7 +303,7 @@ function render(){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.t
 function homeView(){
   if(editing) return workoutView(editing.week,editing.day);
   const m=state.member,w=state.week, days=daysFor(m), pct=Math.round((days.filter(d=>dayComplete(m,w,d)).length/days.length)*100);
-  return `<section class="hero"><div class="field-label">${esc(PROGRAM_DETAILS[activeProgramFor(m)].name)} · 12 weeks</div><h2>${esc(m)} · Week ${w}</h2><p>Double progression: hit the top of every target set, then the next session moves up ${INCREMENT} lb and returns to the bottom of the range.</p>
+  return `<section class="hero"><div class="atlas-brand-promise">LIFT THE WORLD. <small>STRENGTH, MEASURED.</small></div><div class="field-label">${esc(PROGRAM_DETAILS[activeProgramFor(m)].name)} · 12 weeks</div><h2>${esc(m)} · Week ${w}</h2><p>Double progression: hit the top of every target set, then the next session moves up ${INCREMENT} lb and returns to the bottom of the range.</p>
     <div class="select-row"><div><label class="field-label">Member</label><select id="memberSelect" class="select">${MEMBERS.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="field-label">Week</label><select id="weekSelect" class="select">${Array.from({length:WEEKS},(_,i)=>`<option value="${i+1}" ${i+1===w?'selected':''}>Week ${i+1}</option>`).join('')}</select></div></div>
     <div style="margin-top:15px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px"><span>Week completion</span><b>${pct}%</b></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
   </section>
