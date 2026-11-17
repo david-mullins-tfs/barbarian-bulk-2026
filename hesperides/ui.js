@@ -39,7 +39,7 @@
     return '<div class="food-rows">'+items.map(item=>{
       const sum=C.totalsFor([item]);
       const logged=type==='planned'&&S.dayData(root.HesperidesApp?.date||'').consumed.some(x=>x.planId===item.id);
-      return '<div class="food-row"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.servings)+' × '+esc(item.serving)+' · '+metric(sum.calories)+' kcal</small></div>'
+      return '<div class="food-row"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.portionLabel||String(item.servings)+' × '+String(item.serving))+' · '+metric(sum.calories)+' kcal</small></div>'
         +'<div class="food-row-actions">'+(type==='planned'?
           '<button class="tiny positive" data-action="log-plan" data-id="'+esc(item.id)+'" '+(logged?'disabled':'')+'>'+(logged?'✓ Logged':'Log')+'</button>':'')
         +'<button class="tiny muted-button" data-action="remove-entry" data-list="'+type+'" data-id="'+esc(item.id)+'" aria-label="Remove '+esc(item.name)+'">×</button></div></div>';
@@ -57,7 +57,9 @@
       +(mode==='planner'?'<div class="meal-list-title">PLANNED</div>'+intakeRows(planned,'planned')+'<div class="meal-list-title">CONSUMED</div>'+intakeRows(consumed,'consumed'):'<p class="meal-preview">'+(consumed.length?consumed.length+' food item'+(consumed.length===1?'':'s')+' logged':'Nothing eaten yet')+' · '+planned.length+' planned</p>')
       +'<div class="meal-actions">'+(mode==='planner'?'<button class="btn small" data-action="add-food" data-type="planned" data-meal="'+index+'">+ Plan food</button>'
         +'<button class="btn outline small" data-action="add-food" data-type="consumed" data-meal="'+index+'">+ Log food</button>'
-        +(planned.length&&!allPlanned?'<button class="btn outline small" data-action="log-meal" data-meal="'+index+'">Log planned meal</button>':''):'<button class="btn outline small" data-action="view" data-view="planner">View / log meal</button>')+'</div></article>';
+        +(planned.length&&!allPlanned?'<button class="btn outline small" data-action="log-meal" data-meal="'+index+'">Log planned meal</button>':''):'<button class="btn outline small" data-action="add-food" data-type="consumed" data-meal="'+index+'">+ Log food</button>'
+       +'<button class="btn outline small" data-action="add-food" data-type="planned" data-meal="'+index+'">+ Plan food</button>'
+       +'<button class="btn outline small" data-action="view" data-view="planner">View meal</button>')+'</div></article>';
   }
   function today(date){
     const ctx=context(date),{p,d,target,consumed,planned,status}=ctx;
@@ -92,6 +94,7 @@
       +'<p class="subtle">Source: <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer">USDA FoodData Central</a> (public domain). Uses a limited DEMO_KEY for preview. Search may be unavailable or rate-limited; manual entry remains available. Verify labels, preparation and serving amounts.</p></section><section class="panel"><h3 id="foodFormTitle">Add a food</h3>'
       +'<div class="field"><label for="foodName">Food name</label><input id="foodName" maxlength="100" placeholder="e.g. Greek yogurt, plain"></div>'
       +'<div class="field"><label for="foodServing">Serving description</label><input id="foodServing" maxlength="80" placeholder="e.g. 170 g cup"></div>'
+      +'<div class="field"><label for="foodGramWeight">Grams in one serving (optional)</label><input id="foodGramWeight" type="number" min="0" max="10000" step="0.1" placeholder="e.g. 170 if one cup weighs 170 g"><small class="subtle">Enter a known weight to unlock grams/ounces. Never estimate the weight of a cup or tablespoon.</small></div>'
       +'<div class="triad"><div class="field"><label for="foodProtein">Protein (g)</label><input id="foodProtein" type="number" min="0" max="500" step="0.1" placeholder="0"></div>'
       +'<div class="field"><label for="foodCarbs">Carbs (g)</label><input id="foodCarbs" type="number" min="0" max="500" step="0.1" placeholder="0"></div>'
       +'<div class="field"><label for="foodFat">Fat (g)</label><input id="foodFat" type="number" min="0" max="500" step="0.1" placeholder="0"></div></div>'

@@ -21,6 +21,48 @@
     }
     return null;
   }
+  function measures(raw){
+    const result=[],keys=new Set();
+    const push=(label,grams,id)=>{
+      label=String(label||'').trim().replace(/\s+/g,' ');
+      const n=Number(grams);
+      if(!label||!Number.isFinite(n)||n<=0||n>10000)return;
+      const key=label.toLowerCase()+':'+Math.round(n*100)/100;
+      if(keys.has(key))return;keys.add(key);
+      result.push({id:String(id||result.length),label:label.slice(0,70)+' ('+Math.round(n*10)/10+' g)',grams:n});
+    };
+    const amount=Number(raw?.servingSize),unit=String(raw?.servingSizeUnit||'').toLowerCase().trim();
+    if(Number.isFinite(amount)&&amount>0&&['g','gr','gram','grams'].includes(unit)&&raw?.householdServingFullText){
+      push(raw.householdServingFullText,amount,'label');
+    }
+    const portions=[...(Array.isArray(raw?.foodPortions)?raw.foodPortions:[]),
+      ...(Array.isArray(raw?.foodMeasures)?raw.foodMeasures:[])];
+    for(const [i,p] of portions.entries()){
+      const gram=Number(p.gramWeight),count=Number(p.amount)||1;
+      const unitName=typeof p.measureUnit==='object'?p.measureUnit?.name:p.measureUnit;
+      const label=p.portionDescription||p.disseminationText
+        ||[count,unitName||p.modifier||''].join(' ').trim();
+      if(label&&gram>0)push(label,gram,'usda'+(p.id||i));
+    }
+    return result.slice(0,18);
+  }
+  const detailCache=new Map();
+  async function details(foodId,fetcher){
+    const id=Number(foodId);
+    if(!Number.isInteger(id)||id<=0)throw Error('Invalid USDA food ID.');
+    if(detailCache.has(id))return detailCache.get(id);
+    const request=fetcher||fetch;
+    const url='https://api.nal.usda.gov/fdc/v1/food/'+id+'?api_key='+KEY;
+    let response;
+    try{response=await request(url,{method:'GET',headers:{Accept:'application/json'}});}
+    catch(e){throw Error('USDA serving details unavailable; grams and ounces still work.');}
+    if(!response.ok)throw Error('USDA serving details unavailable ('+response.status+'). Grams and ounces still work.');
+    let food;
+    try{food=await response.json();}catch(e){throw Error('USDA serving details could not be read.');}
+    const result=measures(food);
+    detailCache.set(id,result);
+    return result;
+  }
   function normalize(raw){
     if(!raw||!Number.isInteger(Number(raw.fdcId)))return null;
     const protein=nutrient(raw,1003,['protein']);
@@ -32,7 +74,7 @@
     const brand=String(raw.brandOwner||raw.brandName||'').trim();
     const name=(description+(brand?' — '+brand:'')).slice(0,100);
     return {id:String(raw.fdcId),name,brand,description,type:String(raw.dataType||'USDA'),
-      serving:'100 g',protein,carbs,fat,
+      serving:'100 g',gramWeight:100,servingOptions:measures(raw),protein,carbs,fat,
       calories:Math.round(protein*4+carbs*4+fat*9),
       source:'USDA FoodData Central',
       sourceUrl:'https://fdc.nal.usda.gov/food-details/'+String(raw.fdcId)+'/nutrients'};
@@ -54,5 +96,5 @@
     const results=raw.map(normalize).filter(Boolean);
     return {results,found:raw.length,total:Number(obj.totalHits)||raw.length,query:q};
   }
-  return {normalize,nutrient,search,BASE,version:'1.1'};
+  return {normalize,nutrient,search,measures,details,BASE,version:'1.2'};
 });

@@ -1,10 +1,11 @@
 (function(root){
   'use strict';
-  const C=root.HesperidesCore,S=root.HesperidesStore,UI=root.HesperidesUI,DB=root.HesperidesFoodDB;
-  if(!C||!S||!UI||!DB)throw Error('Hesperides modules must load before app.js');
+  const C=root.HesperidesCore,S=root.HesperidesStore,UI=root.HesperidesUI,DB=root.HesperidesFoodDB,P=root.HesperidesPortions,PickerUI=root.HesperidesPickerUI;
+  if(!C||!S||!UI||!DB||!P||!PickerUI)throw Error('Hesperides modules must load before app.js');
   const state={date:localDate(new Date()),view:'today',editingFoodId:null,
     selectedUsda:null,usda:{query:'',results:[],status:'',loading:false},requestSeq:0};
   root.HesperidesApp=state;
+  let picker=null;
   function localDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function yesterday(date){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()-1);return localDate(d);}
   const node=id=>document.getElementById(id);
@@ -27,8 +28,8 @@
       if(active)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current');
     });
     const member=node('memberSelect'),date=node('dayDate'),mealCount=node('mealCountDay');
-    if(member)member.onchange=()=>{S.selectMember(member.value);state.editingFoodId=null;render();};
-    if(date)date.onchange=()=>{if(/^\d{4}-\d{2}-\d{2}$/.test(date.value)){state.date=date.value;render();}};
+    if(member)member.onchange=()=>{closePicker();S.selectMember(member.value);state.editingFoodId=null;render();};
+    if(date)date.onchange=()=>{if(/^\d{4}-\d{2}-\d{2}$/.test(date.value)){closePicker();state.date=date.value;render();}};
     if(mealCount)mealCount.onchange=()=>{
       try{S.saveMealCount(state.date,Number(mealCount.value));render();}
       catch(err){alert(err.message);render();}
@@ -46,23 +47,115 @@
     const link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);
     link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
-  function addFoodDialog(type,meal){
-    const list=S.foodList().slice().sort((a,b)=>a.name.localeCompare(b.name));
-    if(!list.length){state.view='foods';render();notice('Add a food to your library first.');return;}
+  function closePicker(){
     const dlg=node('modal');
-    dlg.innerHTML='<form method="dialog" class="modal-card">'
-      +'<div class="modal-head"><h3>'+(type==='planned'?'Plan food':'Log food eaten')+'</h3><button value="cancel" class="close-button" aria-label="Close">×</button></div>'
-      +'<p class="subtle">Meal '+(meal+1)+' · '+state.date+'</p>'
-      +'<div class="field"><label for="modalFood">Choose food</label><select id="modalFood" class="select">'
-      +list.map(f=>'<option value="'+UI.esc(f.id)+'">'+UI.esc(f.name)+' — '+UI.esc(f.serving)+'</option>').join('')+'</select></div>'
-      +'<div class="field"><label for="modalServings">Number of servings</label><input id="modalServings" type="number" min="0.01" max="100" step="0.25" value="1"></div>'
-      +'<button class="btn full" type="button" id="modalSave">'+(type==='planned'?'Add to plan':'Add to consumed')+'</button>'
-      +'<p class="subtle">Macros are based on the stored nutrition label for each serving.</p></form>';
-    dlg.showModal();
-    node('modalSave').onclick=()=>{
-      try{S.addEntry(state.date,meal,val('modalFood'),Number(val('modalServings')),type);dlg.close();render();notice(type==='planned'?'Food added to plan':'Food logged as eaten');}
-      catch(err){alert(err.message);}
-    };
+    if(dlg?.open)dlg.close();
+    picker=null;
+  }
+  function addFoodDialog(type,meal){
+    const day=S.dayData(state.date);
+    if(!Number.isInteger(meal)||meal<0||meal>=day.mealCount)throw Error('Invalid meal.');
+    picker={step:'search',tab:S.recentFoods().length?'recent':'usda',query:'',meal,date:state.date,
+      member:S.current(),preferred:type,food:null,unit:'g',quantity:100,detailsLoading:false,req:0,
+      usda:{results:[],loading:false,status:''}};
+    renderPicker();
+  }
+  function renderPicker(){
+    if(!picker)return;
+    const dlg=node('modal');
+    dlg.innerHTML=PickerUI.pickerView(picker);
+    if(!dlg.open)dlg.showModal();
+    if(picker.step==='portion'){
+      const unit=node('pickerUnit'),qty=node('pickerQuantity');
+      if(unit)unit.onchange=()=>{picker.unit=unit.value;picker.quantity=Number(qty?.value)||0;renderPickerPreview();};
+      if(qty)qty.oninput=()=>{picker.quantity=Number(qty.value)||0;renderPickerPreview();};
+      renderPickerPreview();
+    }else if(picker.tab!=='custom'){
+      const input=node('pickerQuery'),results=node('pickerResults'),form=node('pickerUsdaForm');
+      if(input){
+        input.oninput=()=>{
+          picker.query=input.value;
+          if(picker.tab!=='usda'&&results)results.innerHTML=PickerUI.resultsView(picker);
+        };
+      }
+      if(form)form.onsubmit=e=>{e.preventDefault();searchPickerUsda();};
+      if(results)results.innerHTML=PickerUI.resultsView(picker);
+    }
+  }
+  function renderPickerPreview(){
+    if(!picker?.food)return;
+    const target=node('pickerPreview');
+    if(!target)return;
+    try{
+      const unit=node('pickerUnit')?.value||picker.unit;
+      const quantity=Number(node('pickerQuantity')?.value);
+      const selection=P.resolve(picker.food,unit,quantity);
+      picker.unit=unit;picker.quantity=quantity;
+      const m=P.macros(picker.food,selection);
+      target.innerHTML='<div class="picker-preview-calories">'+Math.round(m.calories)+' <small>kcal</small></div>'
+        +'<div class="picker-preview-macros"><span><b>'+m.protein+'</b> Protein g</span><span><b>'+m.carbs+'</b> Carbs g</span><span><b>'+m.fat+'</b> Fat g</span></div>'
+        +(selection.portionGrams!=null?'<small>Weight: '+selection.portionGrams+' g</small>':'');
+    }catch(e){
+      target.innerHTML='<p class="notice" role="alert">'+UI.esc(e.message)+'</p>';
+    }
+  }
+  async function searchPickerUsda(){
+    if(!picker||picker.tab!=='usda'||picker.usda.loading)return;
+    const query=node('pickerQuery')?.value?.trim()||'';
+    picker.query=query;picker.usda={results:[],status:'',loading:true};
+    const chosen=picker,seq=++picker.req;
+    renderPicker();
+    try{
+      const found=await DB.search(query);
+      if(picker!==chosen||picker.req!==seq||picker.tab!=='usda'||picker.member!==S.current())return;
+      chosen.usda={results:found.results,loading:false,status:found.results.length?'':'No matching foods with complete macro data. Try another description or Custom.'};
+    }catch(e){
+      if(picker!==chosen||picker.req!==seq||picker.member!==S.current())return;
+      chosen.usda={results:[],loading:false,status:e.message||'USDA unavailable. Try My Foods or Custom.'};
+    }
+    if(picker===chosen)renderPicker();
+  }
+  function selectPickerFood(btn){
+    if(!picker)return;
+    const food=btn.dataset.source==='usda'
+      ?picker.usda.results[Number(btn.dataset.resultIndex)]
+      :S.foodList().find(x=>x.id===btn.dataset.foodId);
+    if(!food)throw Error('Food not found. Search again.');
+    const fromUsda=btn.dataset.source==='usda';
+    const already=fromUsda?S.foodList().find(x=>x.source==='USDA FoodData Central'&&x.sourceId===food.id):null;
+    picker.food=already||food;
+    picker.step='portion';picker.detailsLoading=fromUsda&&!already;
+    picker.unit=P.options(picker.food)[0]?.id||'serving';
+    picker.quantity=picker.unit==='g'?100:1;
+    renderPicker();
+    if(picker.detailsLoading){
+      const current=picker,chosenId=food.id;
+      DB.details(chosenId).then(options=>{
+        if(picker!==current||picker.step!=='portion'||picker.food?.id!==chosenId)return;
+        picker.food={...picker.food,servingOptions:options.length?options:picker.food.servingOptions||[]};
+        picker.detailsLoading=false;renderPicker();
+      }).catch(()=>{
+        if(picker===current&&picker.step==='portion'){picker.detailsLoading=false;renderPicker();}
+      });
+    }
+  }
+  function addPickerSelection(kind){
+    if(!picker?.food)throw Error('Select a food first.');
+    const unit=node('pickerUnit')?.value||picker.unit,quantity=Number(node('pickerQuantity')?.value);
+    const result=S.addPickedFood({date:picker.date,mealIndex:picker.meal,kind,food:picker.food,unitId:unit,quantity});
+    closePicker();render();
+    notice(result.food.name+' · '+(kind==='planned'?'added to plan':'logged as eaten'));
+  }
+  function customPickerNext(){
+    if(!picker)return;
+    const food={name:val('pickName').trim(),serving:val('pickServing').trim(),gramWeight:Number(val('pickGrams'))||0,
+      protein:Number(val('pickProtein')),carbs:Number(val('pickCarbs')),fat:Number(val('pickFat'))};
+    if(!food.name||!food.serving||!Object.values({protein:food.protein,carbs:food.carbs,fat:food.fat})
+      .every(x=>Number.isFinite(x)&&x>=0&&x<=500))throw Error('Enter a food, serving, and valid macros per serving.');
+    if(!Number.isFinite(food.gramWeight)||food.gramWeight<0||food.gramWeight>10000)throw Error('Invalid serving weight.');
+    picker.food=food;picker.step='portion';
+    picker.unit=P.options(food)[0].id;picker.quantity=picker.unit==='g'?(food.gramWeight||100):1;
+    renderPicker();
   }
   function renderUsda(){
     if(state.view!=='foods')return;
@@ -94,7 +187,7 @@
     if(!item)throw Error('That USDA result is no longer available. Search again.');
     state.selectedUsda=item;state.editingFoodId=null;
     for(const [id,value] of Object.entries({
-      foodName:item.name,foodServing:'100 g',foodProtein:item.protein,foodCarbs:item.carbs,foodFat:item.fat
+      foodName:item.name,foodServing:'100 g',foodGramWeight:100,foodProtein:item.protein,foodCarbs:item.carbs,foodFat:item.fat
     })){
       const element=node(id);if(element)element.value=String(value);
     }
@@ -108,8 +201,9 @@
   function saveFood(){
     try{
       const existing=state.editingFoodId;
-      S.saveFood({id:existing,name:val('foodName'),serving:val('foodServing'),
+      S.saveFood({id:existing,name:val('foodName'),serving:val('foodServing'),gramWeight:val('foodGramWeight'),
         protein:val('foodProtein'),carbs:val('foodCarbs'),fat:val('foodFat'),
+        servingOptions:state.selectedUsda?.servingOptions||undefined,
         source:state.selectedUsda?'USDA FoodData Central':'',
         sourceId:state.selectedUsda?.id||''});
       state.editingFoodId=null;state.selectedUsda=null;render();
@@ -120,7 +214,7 @@
     const f=S.foodList().find(x=>x.id===id);if(!f)return;
     if(state.view!=='foods'){state.view='foods';render();}
     state.editingFoodId=id;state.selectedUsda=null;
-    for(const [key,value] of Object.entries({foodName:f.name,foodServing:f.serving,foodProtein:f.protein,foodCarbs:f.carbs,foodFat:f.fat}))node(key).value=value;
+    for(const [key,value] of Object.entries({foodName:f.name,foodServing:f.serving,foodGramWeight:f.gramWeight||'',foodProtein:f.protein,foodCarbs:f.carbs,foodFat:f.fat}))node(key).value=value;
     node('foodFormTitle').textContent='Edit '+f.name;node('saveFoodButton').textContent='Update food';
     node('foodName').focus();window.scrollTo?.({top:0,behavior:'smooth'});
   }
@@ -170,9 +264,18 @@
     try{
       switch(action){
       case 'view':
-        state.view=btn.dataset.view||'today';state.editingFoodId=null;render();break;
+        closePicker();state.view=btn.dataset.view||'today';state.editingFoodId=null;render();break;
       case 'add-food':
         addFoodDialog(btn.dataset.type,Number(btn.dataset.meal));break;
+      case 'picker-close':closePicker();break;
+      case 'picker-back':if(picker){picker.step='search';picker.detailsLoading=false;renderPicker();}break;
+      case 'picker-tab':
+        if(picker){picker.tab=btn.dataset.tabId;picker.query='';picker.req++;renderPicker();}break;
+      case 'picker-select':selectPickerFood(btn);break;
+      case 'picker-favorite':
+        S.toggleFavorite(btn.dataset.foodId);if(picker)renderPicker();break;
+      case 'picker-add':addPickerSelection(btn.dataset.kind);break;
+      case 'picker-custom-next':customPickerNext();break;
       case 'save-food':saveFood();break;
       case 'edit-food':editFood(btn.dataset.id);break;
       case 'cancel-edit-food':state.editingFoodId=null;state.selectedUsda=null;render();break;
@@ -221,7 +324,7 @@
   }
   document.addEventListener('click',e=>{
     const tab=e.target.closest('[data-tab]');
-    if(tab){state.view=tab.dataset.tab;state.editingFoodId=null;render();return;}
+    if(tab){closePicker();state.view=tab.dataset.tab;state.editingFoodId=null;render();return;}
     const button=e.target.closest('[data-action]');
     if(button){e.preventDefault();applyClick(button);}
   });

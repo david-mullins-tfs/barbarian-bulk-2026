@@ -7,7 +7,7 @@
   "display": "standalone",
   "background_color": "#141e21",
   "theme_color": "#141e21",
-  "description": "Hesperides — Eat Like a God. Nutrition, Measured. Macro goals, food search and meal planning.",
+  "description": "Eat Like a God. Search, plan and log foods directly in meals with grams and verified serving sizes.",
   "icons": [
     {
       "src": "./icon.svg",

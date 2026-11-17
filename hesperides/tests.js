@@ -22,7 +22,7 @@ const context=vm.createContext({window,document,localStorage,navigator:{},consol
   Blob:function(){},URL:{createObjectURL:()=> 'blob:local',revokeObjectURL(){}},
   alert:x=>errors.push(x),confirm:()=>true,prompt:()=> 'Reusable day',
   setTimeout:()=>0,clearTimeout(){}});
-for(const file of ['core.js','state.js','ui.js','food-db.js','app.js'])
+for(const file of ['core.js','portions.js','state.js','ui.js','picker-ui.js','food-db.js','app.js'])
   vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const C=window.HesperidesCore,S=window.HesperidesStore,A=window.HesperidesApp;
 const click=(action,attributes={})=>{
@@ -34,6 +34,8 @@ assert.equal(A.view,'today');assert.equal(S.profile().target,null);
 assert.ok(nodes.app.innerHTML.includes('Eat Like a God.'));
 const DB=window.HesperidesFoodDB;
 assert.ok(DB);
+const Portions=window.HesperidesPortions;
+assert.equal(Portions.resolve({serving:'100 g',gramWeight:100,protein:13},'g',244).servings,2.44);
 const usda=DB.normalize({fdcId:345,description:'CHICKEN BREAST',dataType:'Foundation',foodNutrients:[
   {nutrientId:1003,unitName:'G',value:31},{nutrientId:1004,unitName:'G',value:3.6},{nutrientId:1005,unitName:'G',value:0}
 ]});
@@ -100,7 +102,9 @@ assert.ok(atlasApp.includes("const KEY='barbarian_bulk_pwa_v1'"));
 assert.ok(atlasSw.includes("key.startsWith('heldkraft-atlas-')"));
 assert.ok(ourSw.includes("k.startsWith('heldkraft-hesperides-')"));
 assert.ok(ourSw.includes("'./food-db.js'"));
+assert.ok(ourSw.includes("'./portions.js'"));
+assert.ok(ourSw.includes("'./picker-ui.js'"));
 const hespIndex=fs.readFileSync(path.join(root,'index.html'),'utf8');
 assert.ok(hespIndex.includes('EAT LIKE A GOD.'));
-assert.ok(hespIndex.indexOf('food-db.js?v=1.1')<hespIndex.indexOf('app.js?v=1.1'));
-console.log('PASS ATLAS v37.1 and Hesperides v1.1: taglines, USDA lookup preparation, calories, meal plans, migration, backups and cache isolation.');
+assert.ok(hespIndex.indexOf('food-db.js?v=1.2')<hespIndex.indexOf('app.js?v=1.2'));
+console.log('PASS ATLAS v37.1 and Hesperides v1.2: direct picker modules, USDA lookup, calorie and portion math, meal planning and existing history.');

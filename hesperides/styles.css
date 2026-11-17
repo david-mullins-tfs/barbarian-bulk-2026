@@ -60,3 +60,29 @@ input[type=date]{color-scheme:dark}select{color-scheme:dark}input[type=number]{f
 .usda-actions{display:flex;flex-direction:column;gap:6px;align-items:center}
 .usda-source{font-size:10px;color:#E4BD82;text-decoration:underline}
 @media(max-width:400px){.usda-form .field{min-width:100%}.usda-form .btn{width:100%}.usda-item{align-items:stretch}.usda-actions{align-items:stretch}.usda-source{text-align:center}}
+
+/* HESPERIDES v1.2 — direct meal-food picker */
+#modal.app-dialog{max-width:min(490px,96vw);max-height:88vh;overflow-y:auto;overscroll-behavior:contain}
+.picker-tabs{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:12px 0 15px;scrollbar-width:thin}
+.picker-tab{white-space:nowrap;background:#15282b;color:#C6D5CF;border:1px solid #4a615b;border-radius:999px;padding:9px 11px;min-height:39px;font-size:11px;font-weight:750}
+.picker-tab.active{color:#181d1d;background:linear-gradient(130deg,#e3ba78,#c59a59);border-color:#dfb876}
+.picker-search-line{display:flex;gap:7px;margin:1px 0 12px}
+.picker-search-line input{background:#152428;border:1px solid #586b64;border-radius:10px;color:#E8DCC7;min-width:0;flex:1;padding:9px;font-size:14px}
+.picker-results{display:flex;flex-direction:column;max-height:40vh;overflow-y:auto;gap:7px;margin:8px 0 15px}
+.picker-local-row{display:flex;gap:6px;align-items:stretch}
+.picker-result{display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;text-align:left;min-height:63px;background:#1b302f;border:1px solid #48625a;border-radius:10px;padding:10px;color:#E8DCC7;flex:1}
+.picker-result strong{display:block;font-size:12px;line-height:1.35;margin-bottom:4px}
+.picker-result small{display:block;font-size:10px;color:#B1C2BB;line-height:1.45}
+.picker-result:hover,.picker-result:focus-visible{border-color:#E3B976}
+.picker-arrow{font-size:23px;color:#e0b577}
+.picker-star{font-size:20px;color:#E3B976;background:#182726;border:1px solid #48625a;border-radius:11px;min-width:44px;padding:4px}
+.picker-selected{display:flex;flex-direction:column;gap:5px;margin:13px 0;background:#152729;border:1px solid #596b62;border-radius:11px;padding:13px}
+.picker-selected strong{font-size:14px}.picker-selected small{font-size:11px;color:#b8c6be}
+.picker-serving-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:9px;margin-top:14px}
+.picker-serving-grid .field{margin:0;min-width:0}.picker-serving-grid .select{max-width:100%;font-size:12px}
+.picker-serving-grid input{min-width:0}
+.picker-preview{margin:14px 0 11px;padding:13px;border:1px solid #82653a;border-radius:12px;background:linear-gradient(135deg,#273433,#162427)}
+.picker-preview-calories{font-weight:900;font-size:27px;color:#e5bd80}.picker-preview-calories small{font-size:13px;color:#b8c6be}
+.picker-preview-macros{display:flex;gap:12px;flex-wrap:wrap;margin:7px 0;font-size:11px;color:#b8c6be}.picker-preview-macros b{color:#e5bd80}
+.picker-preview>small{color:#b8c6be;font-size:10px}
+@media(max-width:380px){.picker-serving-grid{grid-template-columns:minmax(0,1fr)}.picker-result{padding:9px}.picker-tab{font-size:10px;padding:9px}}
