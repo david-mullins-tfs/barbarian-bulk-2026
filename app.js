@@ -298,7 +298,7 @@ function dayComplete(member,week,day){
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 function render(){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.route===route));
-  const app=document.getElementById('app'); if(route==='home') app.innerHTML=homeView(); else if(route==='progress') app.innerHTML=progressView(); else if(route==='volume') app.innerHTML=volumeView(); else if(route==='macros') app.innerHTML=macrosView(); else if(route==='cardio') app.innerHTML=cardioView(); else if(route==='plates') app.innerHTML=platesView(); else if(route==='notes') app.innerHTML=notesView(); else if(route==='program') app.innerHTML=programEditorView(); else if(route==='library') app.innerHTML=programLibraryView(); else if(route==='artwork') app.innerHTML=artworkGalleryView(); else app.innerHTML=settingsView(); const h=document.querySelector('.header-program');if(h)h.textContent=' / '+PROGRAM_DETAILS[activeProgramFor(state.member)].short;bind();}
+  const app=document.getElementById('app'); if(route==='home') app.innerHTML=homeView(); else if(route==='progress') app.innerHTML=progressView(); else if(route==='volume') app.innerHTML=volumeView(); else if(route==='macros') app.innerHTML=macrosView(); else if(route==='cardio') app.innerHTML=cardioView(); else if(route==='plates') app.innerHTML=platesView(); else if(route==='notes') app.innerHTML=notesView(); else if(route==='program') app.innerHTML=programEditorView(); else if(route==='library') app.innerHTML=programLibraryView(); else if(route==='artwork') app.innerHTML=artworkGalleryView(); else if(route==='exercises') app.innerHTML=exerciseLibraryView(); else app.innerHTML=settingsView(); const h=document.querySelector('.header-program');if(h)h.textContent=' / '+PROGRAM_DETAILS[activeProgramFor(state.member)].short;bind();}
 
 function homeView(){
   if(editing) return workoutView(editing.week,editing.day);
@@ -613,6 +613,41 @@ function programLibraryView(){
     return `<article class="progress-item"><div class="top"><div><div class="field-label">${label.toUpperCase()} · ${program.weeks} WEEKS</div><div class="exercise-name">${esc(program.name)}</div><div class="muted">${esc(program.goal)} · ${days} training days/week</div></div></div>${selected?'<div class="info">Current program for this member.</div>':`<div class="action-row" style="margin-top:12px"><button class="primary" data-activate-program="${program.id}">${program.id===CUT_ID&&!started?'Start Conan Cut':'Switch to '+esc(program.short)}</button></div>`}</article>`;
   }).join('')}</div><div class="section-title">Conan Cut · Full Draft</div><div class="info">Monday–Friday · 25 exercises · 73 working sets/week. Double progression (start with +5 lb when prescribed sets reach the top of their ranges). Calorie deficit and individualized protein targets to be set separately; no bulk surplus is imported. Preview only: Conan Cut remains upcoming until a member starts it.</div><div class="progress-list">${preview}</div>`;
 }
+function exerciseEquipmentType(raw){
+  const e=String(raw||'').toLowerCase();
+  if(/smith/.test(e))return 'Smith Machine';
+  if(/dumbbell|\bdb\b/.test(e))return 'Dumbbell';
+  if(/ez.bar|ez bar/.test(e))return 'EZ-Bar';
+  if(/barbell|half rack/.test(e))return 'Barbell';
+  if(/cable/.test(e))return 'Cable';
+  if(/bodyweight|pullup bar|pull.up bar/.test(e))return 'Bodyweight';
+  if(/machine|plate.loaded|leg press|press machine/.test(e))return 'Machine';
+  return 'Other';
+}
+
+function exerciseLibraryView(){
+  const entries=window.BarbarianExercises.all();
+  const getGroup=item=>window.AtlasRecovery?.muscleGroup(item.primary)||item.primary;
+  const groups=[...new Set(entries.map(getGroup))].sort();
+  const equipment=[...new Set(entries.map(x=>exerciseEquipmentType(x.equipment)))].sort();
+  const rows=entries.map(item=>{
+    const pilot=ATLAS_PILOT[item.name];
+    const art=pilot?'./exercise-art/'+pilot.art+'-pilot.webp':exerciseArt(item.name);
+    const group=getGroup(item),gear=exerciseEquipmentType(item.equipment);
+    return '<button type="button" class="atlas-library-row" data-exercise-detail="'+esc(item.name)+'" data-lib-name="'+esc(item.name.toLowerCase())+'" data-lib-muscle="'+esc(group)+'" data-lib-equipment="'+esc(gear)+'" aria-label="View '+esc(item.name)+'">'
+      +'<span class="atlas-library-thumb"><img src="'+art+'" alt="" loading="lazy" '+(pilot?'':'class="atlas-art-reference" data-art-reference')+'></span>'
+      +'<span class="atlas-library-label"><strong>'+esc(item.name)+'</strong><small>'+esc(group)+' · '+esc(gear)+'</small></span>'
+      +'<span aria-hidden="true" class="atlas-library-chevron">›</span></button>';
+  }).join('');
+  return '<section class="hero atlas-library-hero"><div class="field-label">ATLAS · MOVEMENT REFERENCE</div><h2>Exercise Library</h2><p>Find a movement by muscle or equipment. Tap any illustration to see start and finish positions.</p>'
+    +'<label class="field-label" for="exSearch">Search movements</label><input class="input" id="exSearch" type="search" placeholder="Search exercises…" autocomplete="off">'
+    +'<div class="atlas-library-filters"><label><span class="field-label">Muscles</span><select id="exMuscle" class="select"><option value="">All Muscles</option>'+groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join('')+'</select></label>'
+    +'<label><span class="field-label">Equipment</span><select id="exEquipment" class="select"><option value="">All Equipment</option>'+equipment.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join('')+'</select></label></div>'
+    +'<p class="muted" id="exCount">'+entries.length+' exercises</p></section>'
+    +'<div class="atlas-library-results">'+rows+'</div><div id="exEmpty" class="info" hidden>No exercises match these filters.</div>'
+    +'<div class="action-row"><button class="secondary" data-route="artwork">View original image gallery</button></div>';
+}
+
 function artworkGalleryView(){
   const list=window.BarbarianExercises?.all?.()||[];
   const categories=[...new Set(list.map(item=>item.category))].sort();
@@ -626,9 +661,25 @@ function artworkGalleryView(){
   return `<section class="hero"><div class="field-label">ATLAS V36 · EXERCISE ART REVIEW</div><h2>Exercise Gallery</h2><p>${list.length} exercise entries · ${totalNew} refreshed illustrations · 3 original ATLAS engravings kept. Review each movement and equipment before relying on an image for setup.</p><div class="select-row"><div><label class="field-label">Search exercises</label><input id="artSearch" class="input" type="search" placeholder="Search movement..." autocomplete="off"></div><div><label class="field-label">Category</label><select id="artCategory" class="select"><option value="">All categories</option>${categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div></div></section><div class="info">Gold-toned CC0 illustrations appear for 55 movements. Tap a card to compare start and finish positions. The <b>!</b> symbol flags a variation or piece of equipment needing verification. Images are references, not coaching diagrams. Viewed images can be cached for offline use.</div><div class="atlas-gallery-grid">${tiles}</div><p class="atlas-art-license">CC0 illustrations: <a href="https://github.com/MarvinNazari/exercise-images" rel="noreferrer" target="_blank">Open Exercise Illustrations</a>. Original ATLAS squat, bench and Pec Deck artwork is preserved.</p>`;
 }
 
-function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Program</div><article class="progress-item"><div class="top"><div><div class="exercise-name">Customize the program</div><div class="muted">Choose exercises, sets, and rep ranges by member, week and day for the active program.</div></div><button class="secondary" data-route="program">Edit Program</button></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Program Library</div><div class="muted">Barbarian Bulk and Conan Cut · member-specific cycles.</div></div><button class="secondary" data-route="library">View Programs</button></div></article><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">${WEEKS} weeks · ${daysFor(state.member).join(', ')}</div></div><div>12</div></div></article></div><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
+function settingsView(){return `<section class="hero"><h2>Settings & backups</h2><p>This PWA stores workout entries on the device in local storage. Export a backup before changing phones.</p></section><div class="section-title">Program</div><article class="progress-item"><div class="top"><div><div class="exercise-name">Customize the program</div><div class="muted">Choose exercises, sets, and rep ranges by member, week and day for the active program.</div></div><button class="secondary" data-route="program">Edit Program</button></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Program Library</div><div class="muted">Barbarian Bulk and Conan Cut · member-specific cycles.</div></div><button class="secondary" data-route="library">View Programs</button></div></article><div class="section-title">Group</div><div class="progress-list"><article class="progress-item"><div class="top"><div><div class="exercise-name">Members</div><div class="muted">David · Dan · Jason · Vinjo</div></div><div>4</div></div></article><article class="progress-item"><div class="top"><div><div class="exercise-name">Plan</div><div class="muted">${WEEKS} weeks · ${daysFor(state.member).join(', ')}</div></div><div>12</div></div></article></div><div class="section-title">Nutrition companion</div><article class="progress-item"><div class="top"><div><div class="exercise-name">Hesperides</div><div class="muted">Your separate nutrition PWA for growth, maintenance, fat loss and daily meal planning.</div></div></div><div class="action-row" style="margin-top:12px"><a class="secondary atlas-link-button" href="./hesperides/">Open Hesperides ↗</a><button class="secondary" data-action="export-macros">Export legacy macro history</button><button class="secondary" data-route="macros">View older macro records</button></div></article><div class="section-title">Double progression</div><div class="info">When every target set reaches the top of its rep range, the next session automatically suggests +5 lb. Assisted Chin-Ups instead reduce assistance by 5 lb.</div><div class="action-row" style="margin-top:14px"><button class="primary" data-action="export">Export backup</button><button class="secondary" data-action="import">Import backup</button></div>`}
 
 function bind(){
+  const exSearch=document.getElementById('exSearch'),exMuscle=document.getElementById('exMuscle'),exEquipment=document.getElementById('exEquipment');
+  if(exSearch){
+    const refresh=()=>{
+      const name=exSearch.value.toLowerCase().trim(),muscle=exMuscle?.value||'',equipment=exEquipment?.value||'';
+      let visible=0;
+      document.querySelectorAll('.atlas-library-row').forEach(row=>{
+        const hidden=!!((name&&!row.dataset.libName.includes(name))||(muscle&&row.dataset.libMuscle!==muscle)||(equipment&&row.dataset.libEquipment!==equipment));
+        row.hidden=hidden;if(!hidden)visible++;
+      });
+      const count=document.getElementById('exCount');if(count)count.textContent=visible+' exercises';
+      const empty=document.getElementById('exEmpty');if(empty)empty.hidden=visible!==0;
+    };
+    exSearch.oninput=refresh;
+    if(exMuscle)exMuscle.onchange=refresh;
+    if(exEquipment)exEquipment.onchange=refresh;
+  }
   const m=document.getElementById('memberSelect'); if(m)m.onchange=()=>selectMember(m.value);
   const w=document.getElementById('weekSelect'); if(w)w.onchange=()=>selectWeek(w.value);
   const ed=document.getElementById('editorDay'); if(ed)ed.onchange=()=>{state.editorDay=ed.value;render()};
@@ -824,7 +875,12 @@ function saveProgramChanges(){
   state.editorDay=day;state.editorWeek=week;state.week=week;state.programWeeks[m][activeProgramFor(m)]=week;saveState();
   toast(`${m} ${day} Week ${first}${last>first?'-'+last:''} saved`);route='home';editing=null;render();
 }
-function action(a){const menu=document.getElementById('menuDialog'); if(a.startsWith('route-')){route=a.slice(6);if(route==='program')state.editorWeek=state.week;editing=null;if(menu.open)menu.close();render();return} if(a==='close')menu.close(); if(a==='export')exportData(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();migrateEquipmentUpgrade();migrateProgramLibrary();saveState();render();toast('Local data reset')}}}
+function action(a){const menu=document.getElementById('menuDialog'); if(a.startsWith('route-')){route=a.slice(6);if(route==='program')state.editorWeek=state.week;editing=null;if(menu.open)menu.close();render();return} if(a==='close')menu.close(); if(a==='export')exportData(); if(a==='export-macros')exportMacroArchive(); if(a==='import'){document.getElementById('importInput').click();document.getElementById('menuDialog').close()} if(a==='reset'){if(confirm('Reset all local workout data on this device?')){state={member:'David',week:1,logs:{},nutrition:{},cardio:{},programs:{},notes:{}};migratePrograms();migrateEquipmentUpgrade();migrateProgramLibrary();saveState();render();toast('Local data reset')}}}
+function exportMacroArchive(){
+  const data={format:'atlas-macro-archive-v1',exportedAt:new Date().toISOString(),nutrition:state.nutrition||{},programNutritionTargets:state.programNutritionTargets||{}};
+  const file=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),link=document.createElement('a'),url=URL.createObjectURL(file);
+  link.href=url;link.download='atlas-macro-archive.json';link.click();URL.revokeObjectURL(url);toast('Legacy macros exported');
+}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='barbarian-bulk-backup.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
 document.getElementById('importInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.logs||!x.member)throw new Error();state=x;migratePrograms();migrateEquipmentUpgrade();migrateProgramLibrary();saveState();route='home';editing=null;render();toast('Backup imported')}catch(err){alert('That file is not a valid Barbarian Bulk backup.')}};r.readAsText(f);});
 function renderRestTimerControls(){

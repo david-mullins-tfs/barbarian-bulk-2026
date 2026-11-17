@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Atlas">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=36">
+  <link rel="stylesheet" href="styles.css?v=37">
   <title>Atlas · Heldkraft Performance Research</title>
 </head>
 <body>
@@ -23,21 +23,25 @@
 
   <main id="app" class="app-shell"></main>
 
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <button data-route="home" class="nav-btn active"><span>🏋️</span><small>Workout</small></button>
-    <button data-route="volume" class="nav-btn"><span>📊</span><small>Volume</small></button>
-    <button data-route="macros" class="nav-btn"><span>🥩</span><small>Macros</small></button>
-    <button data-route="cardio" class="nav-btn"><span>🏃</span><small>Cardio</small></button>
-    <button data-route="notes" class="nav-btn"><span>📝</span><small>Notes</small></button>
+  <nav class="bottom-nav atlas-four-tabs" aria-label="Main navigation">
+    <button data-route="home" class="nav-btn active"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg><small>Workout</small></button>
+    <button data-route="exercises" class="nav-btn"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 6c-3-2-6-2-9-1v13c3-1 6-1 9 1m0-13c3-2 6-2 9-1v13c-3-1-6-1-9 1m0-13v13"/></svg><small>Exercises</small></button>
+    <button data-route="volume" class="nav-btn"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19V12m5 7V6m5 13V9m5 10V3"/></svg><small>Volume</small></button>
+    <button data-route="progress" class="nav-btn"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 17 6-6 4 3 8-9M15 5h6v6"/></svg><small>Progress</small></button>
   </nav>
 
   <dialog id="menuDialog" class="menu-dialog">
     <button class="menu-item" data-action="route-progress">📈 Progress</button>
     <button class="menu-item" data-action="route-plates">🧮 Plate Counter</button>
+    <button class="menu-item" data-action="route-cardio">🏃 Cardio</button>
+    <button class="menu-item" data-action="route-notes">📝 Notes</button>
     <button class="menu-item" data-action="route-library">⚔️ Program Library</button>
     <button class="menu-item" data-action="route-artwork">🖼️ Exercise Gallery</button>
     <button class="menu-item" data-action="route-program">🛠️ Program Editor</button>
     <button class="menu-item" data-action="route-settings">⚙️ Settings</button>
+    <a class="menu-item atlas-external-menu" href="./hesperides/">🍏 Open Hesperides ↗</a>
+    <button class="menu-item" data-action="export-macros">📂 Export legacy macros</button>
+    <button class="menu-item" data-action="route-macros">🗄️ Legacy macro history</button>
     <hr class="menu-separator">
     <button class="menu-item" data-action="export">Export backup</button>
     <label class="menu-item file-item">Import backup<input id="importInput" type="file" accept="application/json" hidden></label>
@@ -51,17 +55,17 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="restTimerDock" class="rest-dock" aria-live="polite"></div>
 
-  <script src="nutrition.js?v=36"></script>
-  <script src="cardio.js?v=36"></script>
-  <script src="rest-timer.js?v=36"></script>
-  <script src="warmup.js?v=36"></script>
-  <script src="weight-sync.js?v=36"></script>
-  <script src="volume.js?v=36"></script>
-  <script src="plate-counter.js?v=36"></script>
-  <script src="exercise-library.js?v=36"></script>
-  <script src="atlas-programs.js?v=36"></script>
-  <script src="atlas-recovery.js?v=36"></script>
-  <script src="atlas-art-v36.js?v=36"></script>
-  <script src="app.js?v=36" defer></script>
+  <script src="nutrition.js?v=37"></script>
+  <script src="cardio.js?v=37"></script>
+  <script src="rest-timer.js?v=37"></script>
+  <script src="warmup.js?v=37"></script>
+  <script src="weight-sync.js?v=37"></script>
+  <script src="volume.js?v=37"></script>
+  <script src="plate-counter.js?v=37"></script>
+  <script src="exercise-library.js?v=37"></script>
+  <script src="atlas-programs.js?v=37"></script>
+  <script src="atlas-recovery.js?v=37"></script>
+  <script src="atlas-art-v36.js?v=37"></script>
+  <script src="app.js?v=37" defer></script>
 </body>
 </html>

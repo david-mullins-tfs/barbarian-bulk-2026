@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#141e21">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hesperides">
+  <meta name="description" content="Hesperides by Heldkraft Performance Research. Nutrition, Measured.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=1">
+  <title>Hesperides · Nutrition, Measured.</title>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="Hesperides home">
+      <img src="./icon.svg" width="40" height="40" alt="">
+      <span><small>HELDKRAFT PERFORMANCE RESEARCH</small><strong>HESPERIDES</strong><em>NUTRITION, MEASURED.</em></span>
+    </a>
+    <button id="menuBtn" class="icon-btn" aria-label="Open app menu">☰</button>
+  </header>
+  <main id="app" class="app-shell"></main>
+  <nav class="bottom-nav" aria-label="Nutrition navigation">
+    <button type="button" data-tab="today" class="nav-btn active" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><small>Today</small></button>
+    <button type="button" data-tab="planner" class="nav-btn"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3m2 0h3M8 17h3"/></svg><small>Plan</small></button>
+    <button type="button" data-tab="foods" class="nav-btn"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20c-5 0-8-4-8-9 0-4 4-6 8-3 4-3 8-1 8 3 0 5-3 9-8 9ZM12 8c0-3 1-5 3-6M12 7c-2-3-4-3-6-3"/></svg><small>Foods</small></button>
+    <button type="button" data-tab="goals" class="nav-btn"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><small>Goals</small></button>
+  </nav>
+  <dialog id="menuDialog" class="app-dialog">
+    <div class="menu-panel">
+      <h3>HESPERIDES</h3>
+      <button type="button" data-menu-view="history">📈 History & ATLAS import</button>
+      <button type="button" data-menu-view="goals">🎯 Nutrition goals</button>
+      <button type="button" data-menu-view="foods">🍎 Your food library</button>
+      <a href="../?v=37">🏋️ Open ATLAS ↗</a>
+      <button type="button" data-menu-close>Close</button>
+    </div>
+  </dialog>
+  <dialog id="modal" class="app-dialog"></dialog>
+  <input id="fileInput" type="file" accept=".json,application/json" hidden>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./core.js?v=1"></script>
+  <script src="./state.js?v=1"></script>
+  <script src="./ui.js?v=1"></script>
+  <script src="./app.js?v=1" defer></script>
+</body>
+</html>

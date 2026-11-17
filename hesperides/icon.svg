@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Hesperides golden apple">
+  <rect width="512" height="512" rx="112" fill="#141e21"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" fill="none" stroke="#c59a59" stroke-width="8"/>
+  <path d="M256 144c-19-40-7-76 31-97" fill="none" stroke="#c59a59" stroke-width="17" stroke-linecap="round"/>
+  <path d="M261 150c19-47 70-61 112-31-20 36-68 51-112 31Z" fill="#829c83" stroke="#c59a59" stroke-width="7"/>
+  <path d="M256 177c-41-43-121-37-148 25-44 100 43 217 115 219 21 1 28-10 40-10 15 0 19 10 42 10 76-3 157-129 114-225-28-60-107-66-163-19Z" fill="#c59a59" stroke="#f0d49b" stroke-width="11" stroke-linejoin="round"/>
+  <path d="M174 213c-31 46-7 103 8 126" fill="none" stroke="#f7e0af" stroke-width="14" stroke-linecap="round" opacity=".8"/>
+  <path d="M299 191c45-32 83-11 95 8" fill="none" stroke="#996c36" stroke-width="9" stroke-linecap="round" opacity=".7"/>
+  <circle cx="263" cy="280" r="19" fill="#141e21" opacity=".18"/>
+</svg>

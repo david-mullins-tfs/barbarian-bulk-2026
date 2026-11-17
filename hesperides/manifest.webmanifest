@@ -1,0 +1,19 @@
+{
+  "name": "Hesperides by Heldkraft Performance Research",
+  "short_name": "Hesperides",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#141e21",
+  "theme_color": "#141e21",
+  "description": "Nutrition, Measured. Calorie and macro guidance, meal planning, food logging and nutrition history.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

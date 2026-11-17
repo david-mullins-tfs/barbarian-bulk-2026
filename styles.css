@@ -192,3 +192,27 @@ body{background:#151B23;color:#E8DCC7}
 .atlas-art-license{font-size:11px;line-height:1.5;color:#AEBEC9;margin:12px 2px 28px}
 .atlas-art-license a{color:#E0B675;text-decoration:underline}
 @media(max-width:385px){.atlas-gallery-grid{gap:8px}.atlas-gallery-card{padding:7px;min-height:200px}.atlas-gallery-image{height:130px}.atlas-art-frames img{height:180px}}
+
+/* ATLAS v37 — four-tab navigation and true searchable exercise library */
+.bottom-nav.atlas-four-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom);max-width:none}
+.atlas-four-tabs .nav-btn{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;min-width:0;padding:8px 2px;color:var(--muted);background:transparent}
+.atlas-four-tabs .nav-btn svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.atlas-four-tabs .nav-btn small{font-size:11px;white-space:nowrap}
+.atlas-four-tabs .nav-btn.active{color:#E9BC78}
+.atlas-library-hero #exSearch{width:100%;margin:5px 0 12px}
+.atlas-library-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.atlas-library-filters label{display:flex;flex-direction:column;gap:5px;min-width:0}
+.atlas-library-filters .select{width:100%;min-width:0;max-width:100%;font-size:12px}
+.atlas-library-results{display:flex;flex-direction:column;gap:3px;margin-bottom:18px}
+.atlas-library-row{display:flex;align-items:center;gap:12px;width:100%;min-height:84px;text-align:left;border:1px solid #485969;background:#18232e;padding:6px 9px;border-radius:12px;color:#E8DCC7}
+.atlas-library-row[hidden]{display:none!important}
+.atlas-library-row:hover,.atlas-library-row:focus-visible{border-color:#C59A59}
+.atlas-library-thumb{display:flex;flex:none;align-items:center;justify-content:center;width:77px;height:68px;border:1px solid #314351;background:#111b25;border-radius:8px;overflow:hidden}
+.atlas-library-thumb img{width:100%;height:100%;object-fit:contain}
+.atlas-library-label{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.atlas-library-label strong{font-size:13px;line-height:1.25}
+.atlas-library-label small{font-size:11px;color:#AEB9C3}
+.atlas-library-chevron{font-size:26px;color:#C59A59;padding:0 4px}
+.atlas-link-button{display:inline-flex;align-items:center;text-decoration:none;border:1px solid #56616D;border-radius:11px;padding:11px 14px;min-height:44px}
+.atlas-external-menu{display:block;text-decoration:none}
+@media(max-width:390px){.atlas-library-thumb{width:62px;height:60px}.atlas-library-row{gap:8px;min-height:72px}.atlas-four-tabs .nav-btn small{font-size:10px}}
