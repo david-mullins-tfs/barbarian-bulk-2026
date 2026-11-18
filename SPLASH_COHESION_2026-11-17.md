@@ -10,7 +10,7 @@ Previous splash CSS used pure black as the underlying color. That was darker tha
 - Hesperides #09130F with forest-green highlights
 
 ## Targeted solution
-The splash now uses the exact corresponding app color at top and bottom with a subtle central atmospheric gradient (steel blue for Atlas, garden green for Hesperides). The already-approved gold artwork is blended in screen mode, so its encoded black backdrop does not appear as a box against the colored background.
+The splash now uses the exact corresponding app color at top and bottom with a subtle central atmospheric gradient (steel blue for Atlas, garden green for Hesperides). The already-approved gold artwork is blended with CSS lighten mode, so its encoded black backdrop disappears into the app-matched color while the original gold highlight values are preserved.
 
 This is not a redesign and does not touch:
 - Training or meal picker business logic

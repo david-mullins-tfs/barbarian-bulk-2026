@@ -10,7 +10,7 @@ for(const [name,html,bg,mid,caption,art,cache] of [
   assert.ok(html.includes("Cohesive launch refinement"),name+" themed gradient override");
   assert.ok(html.includes(mid),name+" atmospheric color");
   assert.ok(html.includes(bg),name+" app-matched base");
-  assert.ok(html.includes("mix-blend-mode:screen"),name+" image black blend");
+  assert.ok(html.includes("mix-blend-mode:lighten"),name+" image black backdrop lifted without bleaching gold");
   assert.ok(html.includes(art),name+" approved art retained");
   assert.ok(html.includes(caption),name+" subtitle retained");
   assert.ok(html.includes("HELDKRAFT PERFORMANCE RESEARCH"),name+" studio retained");

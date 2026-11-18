@@ -45,7 +45,7 @@ def art_on(surface, path, top, h):
     dest = src.resize((round(src.width*factor),round(src.height*factor)), Image.Resampling.LANCZOS)
     xy = ((surface.width - dest.width)//2,top+(h-dest.height)//2)
     region = surface.crop((xy[0],xy[1],xy[0]+dest.width,xy[1]+dest.height))
-    surface.paste(ImageChops.screen(region,dest),xy)
+    surface.paste(ImageChops.lighter(region,dest),xy)
 
 def splash_panel(config, new):
     w, h = 300, 423
