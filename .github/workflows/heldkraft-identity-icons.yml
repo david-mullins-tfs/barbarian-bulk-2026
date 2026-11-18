@@ -5,6 +5,8 @@ on:
       - design/atlas-hesperides-identity-2026-11-17
     paths:
       - scripts/build_heldkraft_icons.py
+      - hesperides/app.js
+      - hesperides/meal-picker.test.js
       - .github/workflows/heldkraft-identity-icons.yml
   workflow_dispatch:
 permissions:

@@ -78,7 +78,7 @@
           if(picker.tab!=='usda'&&results)results.innerHTML=PickerUI.resultsView(picker);
         };
       }
-      if(form)form.onsubmit=e=>{e.preventDefault();searchPickerUsda();};
+      if(form)form.onsubmit=e=>{e.preventDefault();return searchPickerUsda();};
       if(results)results.innerHTML=PickerUI.resultsView(picker);
     }
   }
