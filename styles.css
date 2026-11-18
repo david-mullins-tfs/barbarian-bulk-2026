@@ -273,7 +273,7 @@ html,body{background:var(--bg);color:var(--text)}
 
 /* Atlas header: mirror Hesperides' 44px branded emblem without changing its layout or colors. */
 .atlas-header-brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.atlas-header-emblem{display:block;width:44px;height:44px;flex:0 0 44px;object-fit:contain;border-radius:10px}
+.atlas-header-emblem{display:block;width:40px;height:40px;flex:0 0 40px;object-fit:contain;border-radius:10px}
 .atlas-header-text{min-width:0;flex:1}
 .atlas-header-text .eyebrow{font-size:clamp(7px,2.1vw,9px);letter-spacing:.10em;white-space:nowrap}
 .atlas-header-text h1{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:8px;row-gap:2px;margin:3px 0 0}

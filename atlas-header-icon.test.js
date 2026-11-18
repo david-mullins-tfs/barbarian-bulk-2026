@@ -11,7 +11,7 @@ assert.ok(header,'Atlas header exists');
 assert.ok(header.includes('class="atlas-header-brand"'),'Atlas emblem group');
 assert.ok(header.includes('class="atlas-header-emblem"'),'Atlas uses a header image');
 assert.ok(header.includes('src="./icons/icon-192.png?v=icons3"'),'Atlas matches existing app icon artwork');
-assert.ok(header.includes('width="44" height="44"'),'Atlas icon size');
+assert.ok(header.includes('width="40" height="40"'),'Atlas icon size');
 assert.ok(header.includes('alt="" aria-hidden="true"'),'Decorative image does not duplicate spoken title');
 assert.ok(header.includes('HELDKRAFT PERFORMANCE RESEARCH'),'Brand name retained');
 assert.ok(header.includes('ATLAS <span class="header-program">/ Barbarian Bulk</span>'),'Program title retained');

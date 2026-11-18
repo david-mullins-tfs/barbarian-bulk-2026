@@ -2,7 +2,7 @@
 
 Hesperides already displays its 40px golden apple icon alongside the app name in the fixed header. Atlas was missing its equivalent, as shown in the user's iPhone comparison.
 
-This change adds the **existing approved Atlas icon** (icons/icon-192.png) to the Atlas app header in a 44px area. The image uses decorative alt text because the word ATLAS immediately follows. Matching Hesperides' existing treatment makes both apps feel part of the same family without changing either art asset or color palette.
+This change adds the **existing approved Atlas icon** (icons/icon-192.png) to the Atlas app header in a 40px area. The image uses decorative alt text because the word ATLAS immediately follows. Matching Hesperides' existing treatment makes both apps feel part of the same family without changing either art asset or color palette.
 
 Responsive CSS keeps the icon, Heldkraft label, ATLAS / Barbarian Bulk title, and menu button readable on narrow iPhones; the original four tabs remain intact. The Atlas stylesheet and service-worker cache namespace are versioned to refresh installed PWAs.
 
