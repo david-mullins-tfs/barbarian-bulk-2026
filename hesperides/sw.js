@@ -1,4 +1,4 @@
-const CACHE='heldkraft-hesperides-v1-9-transparent-splash';
+const CACHE='heldkraft-hesperides-v1-10-transparent-header';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./ui.js','./state.js','./core.js','./portions.js','./picker-ui.js','./food-db.js','./manifest.webmanifest','./icon.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png','./icons/hesperides-launch.webp', './icons/hesperides-launch-cutout.png'];
 self.addEventListener('install',e=>e.waitUntil(
   caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())

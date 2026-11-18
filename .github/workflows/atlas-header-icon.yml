@@ -1,12 +1,25 @@
-name: Verify Atlas header icon consistency
+name: Verify transparent Heldkraft header emblems
 on:
   push:
     branches:
-      - fix/atlas-matching-header-icon-2026-11-18
+      - fix/transparent-header-emblems-2026-11-18
     paths:
       - index.html
+      - hesperides/index.html
       - styles.css
+      - hesperides/styles.css
       - sw.js
+      - hesperides/sw.js
+      - atlas-header-icon.test.js
+      - .github/workflows/atlas-header-icon.yml
+  pull_request:
+    paths:
+      - index.html
+      - hesperides/index.html
+      - styles.css
+      - hesperides/styles.css
+      - sw.js
+      - hesperides/sw.js
       - atlas-header-icon.test.js
       - .github/workflows/atlas-header-icon.yml
   workflow_dispatch:
@@ -20,9 +33,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check Atlas header identity and mobile layout
+      - name: Check both header emblems and mobile layout
         run: node atlas-header-icon.test.js
       - name: Check Hesperides integration
         run: node hesperides/tests.js
-      - name: Check Hesperides USDA meal picker
+      - name: Check Hesperides meal picker
         run: node hesperides/meal-picker.test.js

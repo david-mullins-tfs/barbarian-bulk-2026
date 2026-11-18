@@ -135,3 +135,15 @@ html,body{background:var(--bg);color:var(--pale)}
 .menu-panel>button,.menu-panel>a{background:#1D3021;border-color:#496249}
 .track{background:#102016;border-color:#436047}
 .brand em,.calories-display,.meal-summary b,.goal-calories{color:#E9C77D}
+
+
+/* Transparent Hesperides header emblem: approved alpha art without square background. */
+.brand{min-width:0;flex:1}
+.brand span{min-width:0}
+.brand .hesperides-header-emblem{display:block;width:44px;height:52px;flex:0 0 44px;object-fit:contain;background:transparent;border:0;border-radius:0}
+.app-header > #menuBtn{flex:0 0 42px;margin-left:8px}
+@media(max-width:390px){
+  .brand{gap:8px}
+  .brand .hesperides-header-emblem{width:38px;height:46px;flex-basis:38px}
+  .app-header > #menuBtn{margin-left:6px}
+}
