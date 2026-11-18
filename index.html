@@ -12,8 +12,55 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=icons1">
   <link rel="stylesheet" href="styles.css?v=37.1">
   <title>Atlas · Heldkraft Performance Research</title>
+  <style id="heldkraft-launch-style">
+  /* Heldkraft launch sequence — uses the approved local icon artwork, not a replacement image. */
+  .hk-launch{position:fixed;inset:0;z-index:10000;min-height:100vh;min-height:100dvh;background:radial-gradient(ellipse 70% 44% at 50% 38%,rgba(197,154,89,.14),transparent 80%),#151B23;color:#E8DCC7;display:flex;align-items:center;justify-content:center;padding:calc(36px + env(safe-area-inset-top)) 18px calc(54px + env(safe-area-inset-bottom));text-align:center;isolation:isolate;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease}
+  .hk-launch--leaving{opacity:0;visibility:hidden;pointer-events:none}
+  .hk-launch-inner{width:100%;max-width:560px;margin:auto;transform:translateY(-1vh)}
+  .hk-launch-studio{font:800 10px/1.45 Inter,system-ui,sans-serif;letter-spacing:.25em;color:#D6AF74;margin-bottom:14px}
+  .hk-launch-art{width:min(84vw,340px);height:min(67vw,260px);max-height:260px;overflow:hidden;margin:0 auto 8px;position:relative}
+  .hk-launch-art img{display:block;width:100%;height:auto;mix-blend-mode:screen;filter:brightness(1.06) saturate(.94);-webkit-mask-image:radial-gradient(ellipse 44% 34% at 50% 31%,#000 49%,rgba(0,0,0,.84) 64%,transparent 99%);mask-image:radial-gradient(ellipse 44% 34% at 50% 31%,#000 49%,rgba(0,0,0,.84) 64%,transparent 99%)}
+  .hk-launch-title{font:700 clamp(43px, 11.5vw, 64px)/1.05 Georgia,'Times New Roman',serif;letter-spacing:.19em;margin:0 0 9px;color:#F0DCB7;text-shadow:0 0 27px rgba(210,157,83,.11)}
+  .hk-launch-tagline{font:italic 24px/1.35 Georgia,'Times New Roman',serif;color:#E5B977;margin:0 0 17px}
+  .hk-launch-subtitle{font:700 11px/1.5 Inter,system-ui,sans-serif;letter-spacing:.23em;text-transform:uppercase;color:#BFC4C4;margin:0}
+  .hk-launch-skip{position:absolute;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));border:1px solid rgba(232,220,199,.28);border-radius:24px;padding:8px 14px;font:600 12px Inter,system-ui,sans-serif;color:#D8C9AF;background:rgba(0,0,0,.14);cursor:pointer}
+  .hk-launch-skip:focus-visible{outline:2px solid #E5B977;outline-offset:3px}
+  @media(max-width:380px){.hk-launch-studio{font-size:8px;letter-spacing:.2em}.hk-launch-art{width:min(87vw,300px);height:min(68vw,242px)}.hk-launch-tagline{font-size:21px}.hk-launch-subtitle{font-size:10px}}
+  @media(prefers-reduced-motion:reduce){.hk-launch{transition:none}}
+  
+  </style>
 </head>
 <body>
+  <section class="hk-launch hk-launch--atlas" id="hkLaunchSplash" role="status" aria-label="ATLAS launching">
+    <div class="hk-launch-inner">
+      <div class="hk-launch-studio">HELDKRAFT PERFORMANCE RESEARCH</div>
+      <div class="hk-launch-art" aria-hidden="true"><img src="./icons/icon-512.png?v=icons1" alt="" width="512" height="512" fetchpriority="high"></div>
+      <h2 class="hk-launch-title">ATLAS</h2>
+      <p class="hk-launch-tagline">Lift the World.</p>
+      <p class="hk-launch-subtitle">Strength, Measured.</p>
+    </div>
+    <button class="hk-launch-skip" type="button" id="hkLaunchSkip" aria-label="Skip launch screen">Skip</button>
+  </section>
+  <script>
+  (function(){
+    'use strict';
+    const splash=document.getElementById('hkLaunchSplash');
+    const skip=document.getElementById('hkLaunchSkip');
+    if(!splash)return;
+    let dismissed=false;
+    let timer;
+    function dismiss(){
+      if(dismissed)return;
+      dismissed=true;
+      splash.classList.add('hk-launch--leaving');
+      const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.setTimeout(function(){splash.remove();},reduce?0:490);
+    }
+    if(skip)skip.addEventListener('click',function(){window.clearTimeout(timer);dismiss();},{once:true});
+    timer=window.setTimeout(dismiss,2250);
+  })();
+  </script>
+
   <header class="app-header">
     <div>
       <div class="eyebrow">HELDKRAFT PERFORMANCE RESEARCH</div>

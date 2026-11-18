@@ -1,4 +1,4 @@
-const CACHE='heldkraft-hesperides-v1-3-icons';
+const CACHE='heldkraft-hesperides-v1-4-launch';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./ui.js','./state.js','./core.js','./portions.js','./picker-ui.js','./food-db.js','./manifest.webmanifest','./icon.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png'];
 self.addEventListener('install',e=>e.waitUntil(
   caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())
