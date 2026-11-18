@@ -35,7 +35,8 @@ jobs:
             git commit -m "Generate title-only Atlas and Hesperides icon assets"
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
-      - name: Regression checks
-        run: |
-          node hesperides/tests.js
-          node hesperides/meal-picker.test.js
+      - name: Hesperides integration regression checks
+        run: node hesperides/tests.js
+      - name: Meal picker regression checks
+        if: always()
+        run: node hesperides/meal-picker.test.js
