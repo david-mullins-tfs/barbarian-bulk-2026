@@ -1,0 +1,49 @@
+name: Review true transparent Atlas/Hesperides splash artwork
+on:
+  push:
+    branches:
+      - fix/heldkraft-transparent-splash-2026-11-18
+    paths:
+      - index.html
+      - hesperides/index.html
+      - sw.js
+      - hesperides/sw.js
+      - scripts/build_transparent_splash.py
+      - scripts/preview_transparent_splash.py
+      - scripts/test_transparent_splash.py
+      - .github/workflows/heldkraft-transparent-splash.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  cutouts-and-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image library
+        run: python -m pip install --disable-pip-version-check 'Pillow==11.3.0'
+      - name: Generate true transparent PNGs from approved original artwork
+        run: python scripts/build_transparent_splash.py
+      - name: Generate before and after review
+        run: python scripts/preview_transparent_splash.py
+      - name: Validate alpha channel, geometry, and review image
+        run: python scripts/test_transparent_splash.py
+      - name: Run existing Hesperides integration and meal picker tests
+        run: |
+          node hesperides/tests.js
+          node hesperides/meal-picker.test.js
+      - name: Commit transparent splash assets to review branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add icons/atlas-launch-cutout.png hesperides/icons/hesperides-launch-cutout.png
+          git add preview/heldkraft-transparent-splash.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate transparent splash cutouts and comparison"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
