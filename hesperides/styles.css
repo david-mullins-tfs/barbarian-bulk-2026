@@ -86,3 +86,25 @@ input[type=date]{color-scheme:dark}select{color-scheme:dark}input[type=number]{f
 .picker-preview-macros{display:flex;gap:12px;flex-wrap:wrap;margin:7px 0;font-size:11px;color:#b8c6be}.picker-preview-macros b{color:#e5bd80}
 .picker-preview>small{color:#b8c6be;font-size:10px}
 @media(max-width:380px){.picker-serving-grid{grid-template-columns:minmax(0,1fr)}.picker-result{padding:9px}.picker-tab{font-size:10px;padding:9px}}
+
+
+/* HELDKRAFT gilded identity v2: shared charcoal and antique-gold palette. */
+:root{--bg:#0F1012;--surface:#1B1D20;--surface2:#252628;--gold:#C59A59;--pale:#E8DCC7;--muted:#B6B4AF;--line:#554A3D;--sage:#91B59A;color-scheme:dark}
+html,body{background:var(--bg);color:var(--pale)}
+.app-header{background:rgba(11,12,14,.98);border-bottom-color:rgba(197,154,89,.36)}
+.bottom-nav{background:rgba(12,13,15,.98);border-top-color:rgba(197,154,89,.36)}
+.hero,.panel,.meal-card{background:linear-gradient(145deg,#28241F,#191B1D);border-color:rgba(197,154,89,.34)}
+.hero{background:linear-gradient(140deg,#30271E,#191B1D);border-top-color:var(--gold)}
+.icon-btn{background:#252528;border-color:#5C4E3F}
+.select,.field input,.food-search,.usda-form .field input,.picker-search-line input,.picker-serving-grid input{background:#131518;color:#F0E5D3;border-color:#5D5143}
+.food-tile,.history-row,.picker-result,.picker-selected,.usda-item{background:#1C1E20;border-color:#544A3D}
+.history-row.legacy,.picker-search-line input{background:#141618}
+.picker-tabs .picker-tab,.picker-tab{background:#202123;border-color:#615142;color:#E8DCC7}
+.picker-tab.active{background:linear-gradient(125deg,#E8BA76,#C59A59);color:#171719;border-color:#E8BA76}
+.picker-preview,.picker-selected{background:linear-gradient(140deg,#29231D,#181A1C);border-color:#6F593B}
+.picker-result:hover,.picker-result:focus-visible{border-color:#E8BA76}
+.app-dialog{background:#1B1D20;border-color:#665540}
+.menu-panel>button,.menu-panel>a{background:#252526;border-color:#605345}
+.track{background:#131518;border-color:#524A3E}
+.status{background:#272623;border-color:#5A5042;color:#DFD4C2}
+.brand em{color:#E8BA76}
