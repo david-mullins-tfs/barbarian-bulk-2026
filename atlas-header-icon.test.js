@@ -1,0 +1,24 @@
+'use strict';
+// Atlas header identity regression: preserve existing navigation and app behavior.
+const fs=require('node:fs');
+const assert=require('node:assert/strict');
+const atlas=fs.readFileSync('index.html','utf8');
+const styles=fs.readFileSync('styles.css','utf8');
+const hesperides=fs.readFileSync('hesperides/index.html','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+const header=atlas.match(/<header class="app-header">([\s\S]*?)<\/header>/)?.[1];
+assert.ok(header,'Atlas header exists');
+assert.ok(header.includes('class="atlas-header-brand"'),'Atlas emblem group');
+assert.ok(header.includes('class="atlas-header-emblem"'),'Atlas uses a header image');
+assert.ok(header.includes('src="./icons/icon-192.png?v=icons3"'),'Atlas matches existing app icon artwork');
+assert.ok(header.includes('width="44" height="44"'),'Atlas icon size');
+assert.ok(header.includes('alt="" aria-hidden="true"'),'Decorative image does not duplicate spoken title');
+assert.ok(header.includes('HELDKRAFT PERFORMANCE RESEARCH'),'Brand name retained');
+assert.ok(header.includes('ATLAS <span class="header-program">/ Barbarian Bulk</span>'),'Program title retained');
+assert.ok(header.includes('id="menuBtn"'),'Existing menu control retained');
+assert.ok(hesperides.includes('<img src="./icons/icon-192.png?v=icons3" width="40" height="40" alt="">'),'Hesperides icon unaffected');
+assert.ok(styles.includes('.atlas-header-brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}'),'Responsive brand row');
+assert.ok(styles.includes('@media(max-width:390px)'),'Narrow phone layout');
+assert.ok(sw.includes('heldkraft-atlas-v37-9-header-emblem'),'Service worker refreshed');
+assert.equal((atlas.match(/class="nav-btn/g)||[]).length,4,'Four-tab Atlas navigation unchanged');
+console.log('PASS: Atlas now has a branded header icon matching Hesperides with narrow-screen safeguards');

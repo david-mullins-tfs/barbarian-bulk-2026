@@ -1,0 +1,28 @@
+name: Verify Atlas header icon consistency
+on:
+  push:
+    branches:
+      - fix/atlas-matching-header-icon-2026-11-18
+    paths:
+      - index.html
+      - styles.css
+      - sw.js
+      - atlas-header-icon.test.js
+      - .github/workflows/atlas-header-icon.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Atlas header identity and mobile layout
+        run: node atlas-header-icon.test.js
+      - name: Check Hesperides integration
+        run: node hesperides/tests.js
+      - name: Check Hesperides USDA meal picker
+        run: node hesperides/meal-picker.test.js
