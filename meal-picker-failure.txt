@@ -1,0 +1,12 @@
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert.ok(nodes.pickerResults.innerHTML.includes('SCRAMBLED EGGS'))
+
+    at main (/home/runner/work/barbarian-bulk-2026/barbarian-bulk-2026/hesperides/meal-picker.test.js:44:10) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
