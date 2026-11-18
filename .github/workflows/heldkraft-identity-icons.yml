@@ -25,10 +25,6 @@ jobs:
           python scripts/build_heldkraft_icons.py
           test -s icons/apple-touch-icon.png
           test -s hesperides/icons/apple-touch-icon.png
-      - name: Regression checks
-        run: |
-          node hesperides/tests.js
-          node hesperides/meal-picker.test.js
       - name: Commit icon previews to this design branch only
         run: |
           git config user.name "github-actions[bot]"
@@ -39,3 +35,7 @@ jobs:
             git commit -m "Generate title-only Atlas and Hesperides icon assets"
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
+      - name: Regression checks
+        run: |
+          node hesperides/tests.js
+          node hesperides/meal-picker.test.js
