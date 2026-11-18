@@ -32,3 +32,6 @@ Current production is main and remains unchanged until this branch is reviewed a
 
 ## iPhone warning
 A changed PWA icon can remain cached on iOS Home Screen even after the website updates. **Export a verified backup before ever removing a Home Screen installation.** Never clear browser website data or uninstall just to refresh branding.
+
+## Meal picker regression investigation
+The prior test could assert on USDA results before the asynchronous search completed. The submit handler in `hesperides/app.js` now returns the search promise, and `hesperides/meal-picker.test.js` awaits it rather than making two microtask guesses. No food serving math or saved meal data logic was altered. Both Hesperides regression checks and artwork generation passed in GitHub Actions run `44235168334`.

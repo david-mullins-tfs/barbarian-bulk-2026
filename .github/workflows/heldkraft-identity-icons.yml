@@ -40,22 +40,4 @@ jobs:
       - name: Hesperides integration regression checks
         run: node hesperides/tests.js
       - name: Meal picker regression checks
-        if: always()
-        shell: bash
-        run: |
-          set +e
-          node hesperides/meal-picker.test.js > meal-picker-failure.txt 2>&1
-          result=$?
-          cat meal-picker-failure.txt
-          if [ "$result" -ne 0 ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add meal-picker-failure.txt
-            if ! git diff --cached --quiet; then
-              git commit -m "Capture failing meal-picker test diagnostics"
-              git push origin "HEAD:$GITHUB_REF_NAME"
-            fi
-          else
-            rm meal-picker-failure.txt
-          fi
-          exit "$result"
+        run: node hesperides/meal-picker.test.js
