@@ -135,3 +135,6 @@ html,body{background:var(--bg);color:var(--pale)}
 .menu-panel>button,.menu-panel>a{background:#1D3021;border-color:#496249}
 .track{background:#102016;border-color:#436047}
 .brand em,.calories-display,.meal-summary b,.goal-calories{color:#E9C77D}
+
+.brand{min-width:0}.brand .header-emblem{display:block;width:48px;height:48px;object-fit:contain;flex:none}
+@media(max-width:375px){.brand{gap:7px}.brand .header-emblem{width:40px;height:40px}}

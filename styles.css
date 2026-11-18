@@ -269,3 +269,7 @@ html,body{background:var(--bg);color:var(--text)}
 .atlas-library-row .atlas-library-chevron,.atlas-brand-promise{color:#D2AD70}
 .atlas-brand-promise small{color:#B3C0CE}
 .atlas-four-tabs .nav-btn.active{color:#D2AD70}
+
+.atlas-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.header-emblem{display:block;width:48px;height:48px;object-fit:contain;flex:none}
+@media(max-width:375px){.atlas-brand{gap:7px}.header-emblem{width:40px;height:40px}.app-header .eyebrow{font-size:8px}}
