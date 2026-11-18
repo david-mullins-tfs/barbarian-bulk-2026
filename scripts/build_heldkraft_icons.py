@@ -11,11 +11,11 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 ROOT = Path(__file__).resolve().parents[1]
 BRANDS = [
     dict(name="ATLAS",art="icons/atlas-launch.webp",out="icons",
-         top=(8,15,27),bottom=(3,7,14),glow=(28,57,87),
+         top=(16,28,42),bottom=(8,14,23),glow=(55,88,112),
          gold=(210,173,112),crop=0.82),
     dict(name="HESPERIDES",art="hesperides/icons/hesperides-launch.webp",
-         out="hesperides/icons",top=(7,22,14),bottom=(3,9,6),
-         glow=(32,72,44),gold=(233,199,125),crop=1.0)
+         out="hesperides/icons",top=(16,34,24),bottom=(9,19,15),
+         glow=(52,95,62),gold=(233,199,125),crop=1.0)
 ]
 
 def serif(size):
