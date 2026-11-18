@@ -1,8 +1,8 @@
-const CACHE = 'heldkraft-atlas-v37-3-launch';
+const CACHE = 'heldkraft-atlas-v37-4-borderless-art';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
   './volume.js', './atlas-programs.js', './atlas-recovery.js', './atlas-art-v36.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './exercise-art/atlas-movement-placeholder.svg',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './icons/atlas-launch.webp', './exercise-art/atlas-movement-placeholder.svg',
   './exercise-art/barbell-back-squat-finish-v31.webp',
   './exercise-art/pec-deck-start-v32.webp', './exercise-art/pec-deck-finish-v32.webp', './exercise-art/barbell-bench-press-start-v32.webp', './exercise-art/barbell-bench-press-finish-v32.webp', './exercise-art/barbell-back-squat-start-v32.webp', './exercise-art/barbell-back-squat-finish-v32.webp',
   './exercise-art/pec-deck-pilot.webp', './exercise-art/barbell-bench-press-pilot.webp', './exercise-art/barbell-back-squat-pilot.webp',

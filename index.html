@@ -28,13 +28,23 @@
   @media(max-width:380px){.hk-launch-studio{font-size:8px;letter-spacing:.2em}.hk-launch-art{width:min(87vw,300px);height:min(68vw,242px)}.hk-launch-tagline{font-size:21px}.hk-launch-subtitle{font-size:10px}}
   @media(prefers-reduced-motion:reduce){.hk-launch{transition:none}}
   
+  
+  /* Borderless splash art revision: use the uploaded full-resolution Atlas / golden apple, not the framed Home Screen icon. */
+  .hk-launch{background:#000}
+  .hk-launch-inner{transform:translateY(-1vh)}
+  .hk-launch-art{width:min(94vw,460px);height:min(56vh,475px);height:min(56dvh,475px);max-height:none;overflow:visible;margin:0 auto 12px}
+  .hk-launch-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:center center;clip-path:none;mix-blend-mode:normal;filter:none;-webkit-mask-image:none;mask-image:none}
+  @media(max-height:700px){.hk-launch-art{height:min(49vh,365px);height:min(49dvh,365px)}.hk-launch-studio{margin-bottom:9px}}
+  @media(max-height:600px){.hk-launch-art{height:min(42vh,310px);height:min(42dvh,310px)}}
+  
   </style>
+  <link rel="preload" href="./icons/atlas-launch.webp?v=2" as="image" type="image/webp">
 </head>
 <body>
   <section class="hk-launch hk-launch--atlas" id="hkLaunchSplash" role="status" aria-label="ATLAS launching">
     <div class="hk-launch-inner">
       <div class="hk-launch-studio">HELDKRAFT PERFORMANCE RESEARCH</div>
-      <div class="hk-launch-art" aria-hidden="true"><img src="./icons/icon-512.png?v=icons1" alt="" width="512" height="512" fetchpriority="high"></div>
+      <div class="hk-launch-art" aria-hidden="true"><img src="./icons/atlas-launch.webp?v=2" alt="" width="512" height="512" fetchpriority="high"></div>
       <h2 class="hk-launch-title">ATLAS</h2>
       <p class="hk-launch-tagline">Lift the World.</p>
       <p class="hk-launch-subtitle">Strength, Measured.</p>
