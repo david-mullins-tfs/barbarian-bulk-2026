@@ -31,7 +31,7 @@
   
   
   /* Borderless splash art revision: use the uploaded full-resolution Atlas / golden apple, not the framed Home Screen icon. */
-  .hk-launch{background:#000}
+  .hk-launch{background:#09130F}
   .hk-launch-inner{transform:translateY(-1vh)}
   .hk-launch-art{width:min(94vw,460px);height:min(56vh,475px);height:min(56dvh,475px);max-height:none;overflow:visible;margin:0 auto 12px}
   .hk-launch-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:center center;clip-path:none;mix-blend-mode:normal;filter:none;-webkit-mask-image:none;mask-image:none}
@@ -46,6 +46,18 @@
   .hk-launch-studio,.hk-launch-tagline{color:#E9C77D}
   .hk-launch-subtitle{color:#BFCCB8}
   .hk-launch-skip:focus-visible{outline-color:#E9C77D}
+
+  /* Cohesive launch refinement: match Hesperides app surfaces, with a faint garden-green light. */
+  .hk-launch{
+    background:
+      radial-gradient(ellipse 67% 48% at 50% 40%,rgba(85,126,90,.24) 0%,rgba(29,68,45,.13) 43%,rgba(9,19,15,0) 78%),
+      linear-gradient(180deg,#09130F 0%,#102218 48%,#09130F 100%);
+    color:#F2E8D6;
+  }
+  .hk-launch-art img{mix-blend-mode:screen;filter:saturate(.96) brightness(1.02)}
+  .hk-launch-title{color:#F5E6C4;text-shadow:0 0 24px rgba(233,199,125,.12)}
+  .hk-launch-studio,.hk-launch-tagline{color:#E9C77D}
+  .hk-launch-subtitle{color:#BFCCB8}
 
   </style>
   <link rel="preload" href="./icons/hesperides-launch.webp?v=2" as="image" type="image/webp">

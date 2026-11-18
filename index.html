@@ -30,7 +30,7 @@
   
   
   /* Borderless splash art revision: use the uploaded full-resolution Atlas / golden apple, not the framed Home Screen icon. */
-  .hk-launch{background:#000}
+  .hk-launch{background:#080E17}
   .hk-launch-inner{transform:translateY(-1vh)}
   .hk-launch-art{width:min(94vw,460px);height:min(56vh,475px);height:min(56dvh,475px);max-height:none;overflow:visible;margin:0 auto 12px}
   .hk-launch-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:center center;clip-path:none;mix-blend-mode:normal;filter:none;-webkit-mask-image:none;mask-image:none}
@@ -45,6 +45,18 @@
   .hk-launch-studio,.hk-launch-tagline{color:#D2AD70}
   .hk-launch-subtitle{color:#B3C0CE}
   .hk-launch-skip:focus-visible{outline-color:#D2AD70}
+
+  /* Cohesive launch refinement: match Atlas app surfaces, with a faint steel-blue light. */
+  .hk-launch{
+    background:
+      radial-gradient(ellipse 67% 48% at 50% 40%,rgba(99,136,158,.21) 0%,rgba(42,71,93,.12) 39%,rgba(8,14,23,0) 77%),
+      linear-gradient(180deg,#080E17 0%,#101C2A 48%,#080E17 100%);
+    color:#EEE3D0;
+  }
+  .hk-launch-art img{mix-blend-mode:screen;filter:saturate(.96) brightness(1.02)}
+  .hk-launch-title{color:#F0DEBE;text-shadow:0 0 24px rgba(210,173,112,.12)}
+  .hk-launch-studio,.hk-launch-tagline{color:#D2AD70}
+  .hk-launch-subtitle{color:#B3C0CE}
 
   </style>
   <link rel="preload" href="./icons/atlas-launch.webp?v=2" as="image" type="image/webp">
