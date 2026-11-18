@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0F1012">
+  <meta name="theme-color" content="#080E17">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Atlas">
-  <link rel="manifest" href="manifest.json?v=brand2">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=icons2">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=icons2">
-  <link rel="stylesheet" href="styles.css?v=brand2">
+  <link rel="manifest" href="manifest.json?v=identity3">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=icons3">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=icons3">
+  <link rel="stylesheet" href="styles.css?v=identity3">
   <title>Atlas · Heldkraft Performance Research</title>
   <style id="heldkraft-launch-style">
   /* Heldkraft launch sequence — uses the approved local icon artwork, not a replacement image. */
@@ -37,6 +37,15 @@
   @media(max-height:700px){.hk-launch-art{height:min(49vh,365px);height:min(49dvh,365px)}.hk-launch-studio{margin-bottom:9px}}
   @media(max-height:600px){.hk-launch-art{height:min(42vh,310px);height:min(42dvh,310px)}}
   
+  
+  /* Coordinated launch treatment: retain approved borderless sculpture. */
+  .hk-launch{background:radial-gradient(ellipse 58% 41% at 50% 37%,rgba(16,34,56,.35),transparent 87%),#000}
+  .hk-launch-art img{mix-blend-mode:screen}
+  .hk-launch-title{color:#F0DEBE}
+  .hk-launch-studio,.hk-launch-tagline{color:#D2AD70}
+  .hk-launch-subtitle{color:#B3C0CE}
+  .hk-launch-skip:focus-visible{outline-color:#D2AD70}
+
   </style>
   <link rel="preload" href="./icons/atlas-launch.webp?v=2" as="image" type="image/webp">
 </head>

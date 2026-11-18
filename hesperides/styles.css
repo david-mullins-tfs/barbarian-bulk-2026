@@ -108,3 +108,30 @@ html,body{background:var(--bg);color:var(--pale)}
 .track{background:#131518;border-color:#524A3E}
 .status{background:#272623;border-color:#5A5042;color:#DFD4C2}
 .brand em{color:#E8BA76}
+
+
+/* Heldkraft identity study — Hesperides: deep garden green, champagne gold. */
+:root{
+  --bg:#09130F;--surface:#14241A;--surface2:#1C3023;
+  --gold:#E9C77D;--pale:#F2E8D6;--muted:#B7C6B6;
+  --line:#405A49;--sage:#A1C393;
+}
+html,body{background:var(--bg);color:var(--pale)}
+.app-header{background:rgba(7,18,12,.97);border-bottom-color:rgba(233,199,125,.29)}
+.bottom-nav{background:rgba(7,17,12,.98);border-top-color:rgba(233,199,125,.28)}
+.hero,.panel,.meal-card{background:linear-gradient(145deg,#1A3020,#101D16);border-color:rgba(192,158,91,.33)}
+.hero{background:linear-gradient(140deg,#233924,#101C15);border-top-color:var(--gold)}
+.icon-btn{background:#1B2D21;border-color:#49644D}
+.select,.field input,.food-search,.usda-form .field input,.picker-search-line input,.picker-serving-grid input{
+  background:#0E1E15;color:#F2E8D6;border-color:#456149
+}
+.food-tile,.history-row,.picker-result,.picker-selected,.usda-item{background:#15251B;border-color:#415B45}
+.history-row.legacy{background:#102017}
+.picker-tab,.picker-tabs .picker-tab{background:#1B3022;border-color:#4E6750;color:#E4E9D8}
+.picker-tab.active,.btn{background:linear-gradient(125deg,#F2D797,#D6B16B);color:#172117;border-color:#E9C77D}
+.picker-preview,.picker-selected{background:linear-gradient(140deg,#203625,#102016);border-color:#6A7652}
+.picker-result:hover,.picker-result:focus-visible{border-color:#E9C77D}
+.app-dialog{background:#14241A;border-color:#557050}
+.menu-panel>button,.menu-panel>a{background:#1D3021;border-color:#496249}
+.track{background:#102016;border-color:#436047}
+.brand em,.calories-display,.meal-summary b,.goal-calories{color:#E9C77D}

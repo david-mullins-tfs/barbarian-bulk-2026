@@ -243,3 +243,29 @@ html,body{background:var(--bg);color:var(--text)}
 .atlas-gallery-card:hover,.atlas-library-row:hover,.atlas-gallery-card:focus-visible,.atlas-library-row:focus-visible{border-color:#C59A59}
 .atlas-art-frames>div{background:#151719;border-color:#554B3D}
 .atlas-library-row .atlas-library-chevron{color:#E8BA76}
+
+
+/* Heldkraft identity study — Atlas: midnight blue, sculptural antique gold. */
+:root{
+  --bg:#080E17;--panel:#142234;--panel2:#1C2D41;
+  --text:#EEE3D0;--muted:#B3C0CE;--line:#405263;--accent:#D2AD70;
+}
+html,body{background:var(--bg);color:var(--text)}
+.app-header{background:rgba(7,13,23,.97);border-bottom-color:rgba(210,173,112,.30)}
+.bottom-nav{background:rgba(7,14,23,.98);border-top-color:rgba(210,173,112,.28)}
+.hero,.recovery-panel{background:linear-gradient(145deg,#192B3E,#0F1927);border-color:rgba(156,116,70,.52)}
+.day-card,.progress-item,.macro-card,.volume-card,.note-result{background:#142234;border-color:#405263}
+.exercise{background:#142131!important;border-color:#415264!important;border-left-color:#728DA6!important}
+.exercise.exercise-active{background:#1D2B39!important;border-left-color:#D2AD70!important}
+.exercise.exercise-complete{border-left-color:#72BD91!important}
+.icon-btn,.back,.secondary{background:#1A2A3C;border-color:#455870}
+.menu-dialog,.note-dialog,.plate-dialog{background:#142234;border-color:#506277}
+.select,.input,.mini-input,.rest-controls{background:#0C1725!important;color:#EEE3D0!important;border-color:#42546B!important}
+.exercise-more>summary,.exercise-more .exercise-actions{background:#132034;border-color:#53647B}
+.exercise-illustration,.atlas-gallery-image,.atlas-library-thumb{background:#0B1522;border-color:#364C63}
+.atlas-gallery-card,.atlas-library-row{background:#142234;border-color:#40566D}
+.atlas-gallery-card:hover,.atlas-library-row:hover,.atlas-gallery-card:focus-visible,.atlas-library-row:focus-visible{border-color:#D2AD70}
+.atlas-art-frames>div{background:#0E1A29;border-color:#40566D}
+.atlas-library-row .atlas-library-chevron,.atlas-brand-promise{color:#D2AD70}
+.atlas-brand-promise small{color:#B3C0CE}
+.atlas-four-tabs .nav-btn.active{color:#D2AD70}
