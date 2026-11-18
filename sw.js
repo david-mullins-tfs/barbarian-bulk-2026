@@ -1,4 +1,4 @@
-const CACHE = 'heldkraft-atlas-v37-5-gilded-theme';
+const CACHE = 'heldkraft-atlas-v37-6-midnight-identity';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './nutrition.js', './cardio.js',
   './volume.js', './atlas-programs.js', './atlas-recovery.js', './atlas-art-v36.js', './plate-counter.js', './rest-timer.js', './warmup.js', './weight-sync.js', './exercise-library.js', './manifest.json',

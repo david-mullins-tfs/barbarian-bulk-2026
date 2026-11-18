@@ -39,8 +39,8 @@ async function main(){
   assert.ok(nodes.modal.innerHTML.includes('Search & add food'));
   assert.ok(nodes.modal.innerHTML.includes('data-tab-id="usda"'));
   fields({pickerQuery:'scrambled eggs'});
+  // Wait for the actual search to settle; arbitrary microtask counts can race.
   await nodes.pickerUsdaForm.onsubmit({preventDefault(){}});
-  await Promise.resolve();await Promise.resolve();
   assert.ok(nodes.pickerResults.innerHTML.includes('SCRAMBLED EGGS'));
   click('picker-select',{source:'usda',resultIndex:'0'});
   for(let i=0;i<10;i++)await Promise.resolve();
